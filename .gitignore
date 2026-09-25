@@ -1,0 +1,19 @@
+node_modules/
+.next/
+out/
+
+# Generated build artifacts
+*.tsbuildinfo
+
+# Local editor/tool settings (not project code)
+.claude/
+
+# Environment files: ignore everything except the documented example.
+.env
+.env.*
+!.env.example
+
+*.log
+.DS_Store
+.vercel/
+coverage/
