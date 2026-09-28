@@ -30,7 +30,7 @@ Nothing marked PENDING, POST-INFRASTRUCTURE or FINAL PRE-LAUNCH has been perform
 | Unique page titles and descriptions | **CURRENTLY COMPLETE** † | Day 4 metadata audit |
 | Unpublished sections return 404 and are not linked | **CURRENTLY COMPLETE** † | Day 4: 10 hidden sections 404, even with indexing enabled |
 | Sample job pages `noindex` | **CURRENTLY COMPLETE** | Automatic while `JOBS_ARE_SAMPLE_DATA` is true |
-| **Staging remains no-index** | Mechanism **COMPLETE**; verification **POST-INFRASTRUCTURE** | `robots.txt` disallows everything by default (tested locally). On real staging, confirm Vercel Authentication protection, `robots.txt`, and Vercel's preview noindex header. |
+| **Staging remains no-index** | Mechanism **COMPLETE**; verification **POST-INFRASTRUCTURE** | `robots.txt` disallows everything by default (tested locally). On real staging, confirm Vercel Authentication protection, `robots.txt`, and Vercel's preview noindex header. **Day 10 (28-09-2026): still unverifiable — the developer has no Vercel access, and no deployment URL has been provided.** |
 | **Production is properly indexable at launch** | **FINAL PRE-LAUNCH** | Set `NJEN_ALLOW_INDEXING=true` in **production only**; confirm `robots.txt` allows crawling and real published pages carry no `noindex`. |
 | **Canonical URLs** | **POST-INFRASTRUCTURE** | Needs the production domain (register C13) |
 | **Sitemap** | **POST-INFRASTRUCTURE** | Needs the domain and published Payload content. Must list only published pages. |
@@ -67,5 +67,8 @@ Nothing marked PENDING, POST-INFRASTRUCTURE or FINAL PRE-LAUNCH has been perform
 | **Error reporting verification** | **POST-INFRASTRUCTURE** | Server and client errors both reported; the error page stays generic for visitors |
 | Analytics verification | **POST-INFRASTRUCTURE** | Plausible records pageviews; no cookies set |
 | Email deliverability | **POST-INFRASTRUCTURE** | Resend sending domain verified on NJEN DNS |
-| Production deployment, domain and SSL, rollback plan | **FINAL PRE-LAUNCH** | Documented and rehearsed |
+| Production deployment, domain and SSL, rollback plan | **FINAL PRE-LAUNCH** | Documented and rehearsed. **Day 10: deployment state unverified — no Vercel access.** Code-side deployment readiness *is* verified: a clean-room `npm ci` + `next build` with **zero environment variables** passed (24 routes), and all `@/` imports are exact-case for Linux builds. |
 | NJEN ownership of all accounts, and recovery access | **FINAL PRE-LAUNCH** | Confirm every provider account is NJEN-owned (see `INFRASTRUCTURE_AND_COST_ASSESSMENT.md`) |
+| **Vercel plan is licensed for commercial use** | **PENDING — CLIENT CONFIRMATION** | Vercel's free Hobby plan is non-commercial only; a commercial site needs Pro. Day 10: plan unknown, no Vercel access. |
+| **Repository visibility appropriate to its contents** | **PENDING — CLIENT DECISION** | Day 10: `NJEnetwork/njen-website` is private (correct). The newly invited `NJentertainmentnetwork/njen-website` is **public and empty**; it must be made private, or scoped to application code only, before any migration. See register item A2a. |
+| **Environment variables configured per environment** | Mechanism **COMPLETE**; application **POST-INFRASTRUCTURE** | Day 10: the current site requires **no** environment variables. At launch, `NJEN_SITE_URL` must be set and `NJEN_ALLOW_INDEXING=true` set in **production only**; `NJEN_PREVIEW_UNPUBLISHED` must be absent in production. Full matrix in `ENVIRONMENT_VARIABLES.md`. |

@@ -96,8 +96,8 @@ export const formFields: Record<FormKind, FieldDefinition[]> = {
 
 /**
  * Anti-abuse inputs collected alongside a submission. The checks run on the
- * server; the exact thresholds and any additional provider (for example a
- * challenge service) are decided when forms are built.
+ * server; any additional provider (for example a challenge service) is decided
+ * when forms are built.
  */
 export type SpamSignals = {
   /** Hidden field that real people leave empty. */
@@ -105,6 +105,16 @@ export type SpamSignals = {
   /** Milliseconds between form render and submit; near-zero implies a bot. */
   elapsedMs?: number;
 };
+
+/**
+ * Minimum plausible time to complete a form. Nobody fills in several fields,
+ * including a message, in under a second.
+ *
+ * Deliberately low: this is a floor for obvious automation, not a speed limit on
+ * people. Rate limiting (Days 18-23) is the separate control for volume, and it
+ * belongs on the server route, not here.
+ */
+export const MIN_SUBMISSION_MS = 900;
 
 export type FieldError = { field: string; message: string };
 
@@ -143,9 +153,15 @@ export function validateSubmission(
 ): ValidationResult<Record<string, string>> {
   const errors: FieldError[] = [];
 
-  // Bot signals are reported as a generic failure, never as a hint.
+  // Bot signals are reported as a generic failure, never as a hint about which
+  // check was tripped.
+  const rejected: ValidationResult<Record<string, string>> = {
+    ok: false,
+    errors: [{ field: "form", message: "This submission could not be accepted." }],
+  };
+
   if (spam.honeypot && spam.honeypot.trim() !== "") {
-    return { ok: false, errors: [{ field: "form", message: "This submission could not be accepted." }] };
+    return rejected;
   }
 
   const value: Record<string, string> = {};
@@ -178,5 +194,17 @@ export function validateSubmission(
     value[field.name] = text;
   }
 
-  return errors.length > 0 ? { ok: false, errors } : { ok: true, value };
+  if (errors.length > 0) {
+    return { ok: false, errors };
+  }
+
+  // Timing is checked last, and only on an otherwise complete submission. A
+  // complete payload filled implausibly fast is the automated case worth
+  // stopping; an incomplete one is a person who needs field errors, not a
+  // generic rejection that tells them nothing.
+  if (typeof spam.elapsedMs === "number" && Number.isFinite(spam.elapsedMs) && spam.elapsedMs < MIN_SUBMISSION_MS) {
+    return rejected;
+  }
+
+  return { ok: true, value };
 }

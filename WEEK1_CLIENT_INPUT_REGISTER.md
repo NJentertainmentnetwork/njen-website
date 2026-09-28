@@ -12,7 +12,7 @@ Single prioritized list of everything NJEN must supply, decide or grant. Updated
 
 **Current client priority order (25-09-2026):** P0 NJEN-owned Supabase access · P1 approved Homepage/About copy, images and assets · P2 contact-form routing and approved wording · P3 production domain/DNS when ready to deploy.
 
-GitHub access is **accepted and available**; the repository is https://github.com/NJEnetwork/njen-website. Vercel is **reported as connected** to that repository; its build/deployment result has not been verified by the developer and must be confirmed in NJEN's Vercel dashboard.
+GitHub access is **accepted and available**. The code is **confirmed pushed** to https://github.com/NJEnetwork/njen-website (branch `main`, commit `8bffc97`), verified 28-09-2026 from the local Git metadata; that repository is **private**. A second repository, https://github.com/NJentertainmentnetwork/njen-website, now exists, is **empty**, and is **public** — NJEN must confirm which repository is official, and make the new one private before any code is moved there (see A2a). Vercel is **reported as connected**; the developer has **not** been given Vercel access, so no dashboard or build log has been inspected and no deployment result is verified.
 
 Only **Home, Jobs, Career Center, Industry / Production and Publications** are public today. Other launch sections are built but return 404 until approved content exists (decision R5).
 
@@ -22,7 +22,8 @@ Only **Home, Jobs, Career Center, Industry / Production and Publications** are p
 
 | ID | Priority | Requirement | Status | Needed from NJEN |
 |---|---|---|---|---|
-| A2 / D1 | — | NJEN GitHub organization and repository | **RESOLVED** | Repository available: https://github.com/NJEnetwork/njen-website. The local project is not yet a Git repository; the client performs all Git operations. |
+| A2 / D1 | — | NJEN GitHub organization and repository | **RESOLVED — CODE PUSHED** | Verified 28-09-2026: local `main` and `origin/main` both at commit `8bffc97`, reflog shows `update by push`. Repository https://github.com/NJEnetwork/njen-website is **private**. The client performs all Git operations. |
+| A2a | **P1** | Which repository is official, and its visibility | **OPEN — CLIENT DECISION REQUIRED** | https://github.com/NJentertainmentnetwork/njen-website exists but is **empty and public**. Confirm which repository is official. If the new one is chosen, **make it private first** — the working tree contains business rules, cost assessments, the post-launch roadmap and NJEN's supplied documents. No migration until NJEN confirms and approves. |
 | D7 | — | Developer repository access | **RESOLVED** | Invitation accepted. |
 | A3 | **P3** | Protected, no-index staging environment | **PENDING VERIFICATION** | Needed for the Week 1 working staging demonstration. Depends on D2. Vercel Authentication protects staging at no extra cost (verified 22-09-2026); NJEN reviewers use free viewer seats. |
 
@@ -32,7 +33,7 @@ All accounts must be NJEN-owned or fully recoverable by NJEN (Business Rules sec
 
 | ID | Priority | Provider / decision | Status | Needed from NJEN |
 |---|---|---|---|---|
-| D2 / T4 | **P3** | Vercel | **REPORTED CONNECTED — BUILD NOT VERIFIED** | Vercel is reported as connected to the repository. The developer has not seen a build log or deployment result; NJEN confirms in the Vercel dashboard. Staging protection (Vercel Authentication, no extra cost) still to be set. |
+| D2 / T4 | **P1** (raised 28-09-2026) | Vercel | **UNVERIFIED — DEVELOPER ACCESS NOT PROVIDED** | As of 28-09-2026 the developer has **no** Vercel access: no dashboard, no logs, no deployment URL. Needed: project name and team/scope; connected repository **and branch**; viewer access or an exported build log; the deployment URL; plan confirmation (**Hobby is non-commercial only**); Vercel Authentication enabled on Preview. Code-side causes are ruled out — a clean `npm ci` + `next build` with **zero** env vars passed (24 routes). Unverified hypothesis: the project may be connected to the **empty** new repository. See `DAY10_IMPLEMENTATION_REPORT.md` §4–§6. |
 | D4 / T1 | **P0 — TOP PRIORITY** | Supabase / PostgreSQL | **APPROVED — ACCESS PENDING** | Create the NJEN-owned organization/project and invite the developer. This is the single blocker for Payload, real jobs, publications and all CMS content. Migrations (prepared in `db/migrations/`), RLS and the restore test are developer work. |
 | T3 | **P0** | Payload CMS deployment context | **APPROVED — NOT IMPLEMENTED** | Runs inside the NJEN app; needs D2 and D4 first. |
 | D5 / T5 | **P1** | Resend (transactional email) | **APPROVED — ACCESS PENDING** | NJEN-owned account; sending-domain DNS access (see D3). |

@@ -1,4 +1,5 @@
 import { jobs as sampleJobs, type Job } from "@/data/jobs";
+import { publiclyVisible, type PublishGateFields } from "@/lib/publish-gate";
 
 /**
  * Public jobs service — the only way pages read jobs.
@@ -14,6 +15,11 @@ import { jobs as sampleJobs, type Job } from "@/data/jobs";
  *   3. Map CMS records to `PublicJob` with explicit fields, so internal fields
  *      (source, moderation notes, reviewer, submitter) never reach the browser.
  *   4. Keep sorting and any future filtering server-side.
+ *
+ * Rules 1 and 2 are now enforced here rather than merely described: every read
+ * below passes the source through the shared publication gate in
+ * `lib/publish-gate.ts`, which is fail-closed. A CMS adapter therefore only has
+ * to supply records; it must not reimplement the gate. Rule 3 is `toPublicJob`.
  *
  * Fields such as moderation state, publish state, expiry, closed/archived state
  * and the listing source live in the CMS record, not in `PublicJob`: they decide
@@ -66,9 +72,29 @@ export type PublicJob = {
  */
 export const JOBS_ARE_SAMPLE_DATA = true;
 
+/**
+ * A source record as it may arrive before it is trusted, with the staff-side
+ * editorial fields the gate reads. The local sample file carries none of them.
+ */
+type SourceJob = Job & PublishGateFields;
+
+/**
+ * The sample file in `data/jobs.ts` predates the CMS and has no moderation
+ * state, so while it is the source the gate is told to accept a missing
+ * `status`. That allowance is tied to `JOBS_ARE_SAMPLE_DATA`: the moment this
+ * module serves real records, a job with no moderation state is rejected, which
+ * is the fail-closed behaviour the launch gate requires.
+ */
+const missingStatusPolicy = JOBS_ARE_SAMPLE_DATA ? "allow" : "reject";
+
+function gated(records: readonly SourceJob[]): SourceJob[] {
+  return publiclyVisible(records, new Date(), missingStatusPolicy);
+}
+
 // Explicit field mapping: a future source record with extra (private) fields can
-// never leak through to pages, props or API responses.
-function toPublicJob(job: Job): PublicJob {
+// never leak through to pages, props or API responses. The gate fields above are
+// deliberately absent from `PublicJob`.
+function toPublicJob(job: SourceJob): PublicJob {
   return {
     slug: job.slug,
     title: job.title,
@@ -85,15 +111,17 @@ function toPublicJob(job: Job): PublicJob {
 }
 
 export async function getPublishedJobs(limit?: number): Promise<PublicJob[]> {
-  const published = sampleJobs.map(toPublicJob);
+  const published = gated(sampleJobs).map(toPublicJob);
   return typeof limit === "number" ? published.slice(0, limit) : published;
 }
 
 export async function getPublishedJobBySlug(slug: string): Promise<PublicJob | null> {
-  const job = sampleJobs.find((candidate) => candidate.slug === slug);
+  // Gate first, then match: a slug must not be able to reach a record that the
+  // listing would not show.
+  const job = gated(sampleJobs).find((candidate) => candidate.slug === slug);
   return job ? toPublicJob(job) : null;
 }
 
 export async function getPublishedJobSlugs(): Promise<string[]> {
-  return sampleJobs.map((job) => job.slug);
+  return gated(sampleJobs).map((job) => job.slug);
 }

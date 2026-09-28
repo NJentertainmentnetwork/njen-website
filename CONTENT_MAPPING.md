@@ -4,6 +4,8 @@
 
 Companion documents: `PAYLOAD_CMS_PLAN.md` (collection design), `lib/content-types.ts` (typed contracts), `WEEK1_CLIENT_INPUT_REGISTER.md` (client dependencies), `SUPABASE_PAYLOAD_RESPONSIBILITY_MODEL.md` (data ownership).
 
+**Day 10 verification (28-09-2026):** the CMS column below is still entirely forward-looking. Re-confirmed by inspection that **no Payload package, `payload.config.ts`, collection or database adapter exists**, and **no Supabase package, client or connection exists**. Content continues to be served through `lib/jobs.ts` and `lib/publications.ts` behind the typed contracts in `lib/content-types.ts`, so the mapping below is the swap plan, not the current wiring. Installation remains blocked on the NJEN-owned Supabase project (register D4/T1). No row in this document changed.
+
 ---
 
 ## 1. Public sections
