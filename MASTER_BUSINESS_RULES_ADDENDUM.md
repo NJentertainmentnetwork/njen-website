@@ -42,7 +42,7 @@ Every rule below is **POST-LAUNCH** unless stated otherwise. None of it expands 
 - Refund rules.
 - Searchable profile fields.
 - Minimum age and guardian workflow.
-- Industry contact rule (direct contact vs controlled request).
+- Industry contact rule (direct contact vs controlled request)..
 
 ## 2. Membership pricing (POST-LAUNCH)
 
