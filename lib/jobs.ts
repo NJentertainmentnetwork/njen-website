@@ -115,6 +115,113 @@ export async function getPublishedJobs(limit?: number): Promise<PublicJob[]> {
   return typeof limit === "number" ? published.slice(0, limit) : published;
 }
 
+/* ---------------------------------------------------------------------------
+ * Launch filters (30-Day Plan, Days 11-17: "filters needed for launch
+ * (category/location/type; keep scope small)").
+ *
+ * Deliberate boundaries:
+ * - Filtering happens HERE, on the server, never in the browser. A filtered
+ *   list is produced by the same gated read as an unfiltered one, so a filter
+ *   can only ever narrow what the publication gate already allowed. It can
+ *   never widen it, and it is not a way to reach an unpublished record.
+ * - Only three facets, all drawn from fields already public on `PublicJob`.
+ *   No keyword search, no salary or date facets: keep scope small.
+ * - A filter value is accepted ONLY if it exactly matches an option derived
+ *   from the currently published jobs. Anything else is discarded, so an
+ *   arbitrary query string can never be echoed back into the page.
+ * ------------------------------------------------------------------------- */
+
+export const JOB_FILTER_KEYS = ["category", "location", "type"] as const;
+
+export type JobFilterKey = (typeof JOB_FILTER_KEYS)[number];
+
+/** The filters actually applied. A key is absent when it is not in use. */
+export type JobFilters = Partial<Record<JobFilterKey, string>>;
+
+/** Available values per facet, derived from the published jobs themselves. */
+export type JobFilterOptions = Record<JobFilterKey, string[]>;
+
+export type JobsView = {
+  /** Published jobs matching the applied filters. */
+  jobs: PublicJob[];
+  /** Total published jobs before filtering, for "showing X of Y". */
+  total: number;
+  options: JobFilterOptions;
+  applied: JobFilters;
+  /** True when at least one filter is in use. */
+  isFiltered: boolean;
+  /**
+   * True when a supplied value was not a known option and was discarded.
+   * The page uses this to explain the result rather than silently ignoring it.
+   */
+  discarded: boolean;
+};
+
+/** Guard against absurd query values before any comparison. */
+const MAX_FILTER_VALUE_LENGTH = 120;
+
+/** A query parameter may arrive as a string, a repeated array, or absent. */
+type RawParam = string | string[] | undefined;
+
+function firstValue(raw: RawParam): string {
+  const value = Array.isArray(raw) ? raw[0] : raw;
+  return typeof value === "string" ? value.trim() : "";
+}
+
+function optionsFrom(jobs: readonly PublicJob[]): JobFilterOptions {
+  const collect = (pick: (job: PublicJob) => string) =>
+    Array.from(new Set(jobs.map(pick).filter((value) => value !== ""))).sort((a, b) =>
+      a.localeCompare(b),
+    );
+
+  return {
+    category: collect((job) => job.category),
+    location: collect((job) => job.location),
+    type: collect((job) => job.type),
+  };
+}
+
+/**
+ * Builds the jobs index view: the gated job list, the facet options, and the
+ * validated filters, in one server-side read.
+ *
+ * @param params The page's search parameters, unvalidated.
+ */
+export async function getJobsView(params: Record<string, RawParam> = {}): Promise<JobsView> {
+  const published = gated(sampleJobs).map(toPublicJob);
+  const options = optionsFrom(published);
+
+  const applied: JobFilters = {};
+  let discarded = false;
+
+  for (const key of JOB_FILTER_KEYS) {
+    const value = firstValue(params[key]);
+    if (value === "") continue;
+    // Allow-list check: the value must be one this data actually offers.
+    if (value.length > MAX_FILTER_VALUE_LENGTH || !options[key].includes(value)) {
+      discarded = true;
+      continue;
+    }
+    applied[key] = value;
+  }
+
+  const jobs = published.filter((job) =>
+    JOB_FILTER_KEYS.every((key) => {
+      const wanted = applied[key];
+      return wanted === undefined || job[key] === wanted;
+    }),
+  );
+
+  return {
+    jobs,
+    total: published.length,
+    options,
+    applied,
+    isFiltered: Object.keys(applied).length > 0,
+    discarded,
+  };
+}
+
 export async function getPublishedJobBySlug(slug: string): Promise<PublicJob | null> {
   // Gate first, then match: a slug must not be able to reach a record that the
   // listing would not show.
