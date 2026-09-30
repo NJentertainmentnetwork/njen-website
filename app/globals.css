@@ -178,3 +178,15 @@ body { overflow-wrap: break-word; }
   .filter-fields { grid-template-columns: 1fr; }
   .filter-actions .button { width: 100%; }
 }
+
+/* --- Touch targets (measured on a 390 px iPhone viewport, Day 12/13) ---
+   WCAG 2.2 AA (2.5.8 Target Size Minimum) asks for 24x24 CSS px, and exempts
+   links sitting inline inside a block of text. Everything here already met that.
+   These rules lift the controls people actually aim a thumb at to the more
+   comfortable 44x44 guidance, without changing any layout or spacing rhythm.
+   Inline text links (job titles, "Browse all jobs", footer list links) are left
+   alone: they are the documented inline exception, and padding them would break
+   the reading rhythm of the text they sit in. */
+.mobile-nav a { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 44px; }
+.brand { min-height: 44px; }
+.breadcrumbs a, .breadcrumbs [aria-current="page"] { display: inline-block; padding: 4px 0; }

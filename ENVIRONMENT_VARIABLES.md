@@ -1,6 +1,6 @@
 # NJEN — Environment Variables and Deployment Configuration
 
-**Verified 28-09-2026 (Day 10) by reading the actual source code**, not by copying `.env.example`. Every entry below was checked against real `process.env` usage.
+**Verified 28-09-2026 (Day 10) by reading the actual source code**, not by copying `.env.example`. Every entry below was checked against real `process.env` usage. **Re-verified 30-09-2026 (Day 12): unchanged** — the same three variables are read, and no new `process.env` reference or `NEXT_PUBLIC_` usage has appeared.
 
 **No real secret value appears in this document, and none should be pasted into it.** Values are supplied by NJEN through a secure channel and entered directly in the provider dashboards.
 

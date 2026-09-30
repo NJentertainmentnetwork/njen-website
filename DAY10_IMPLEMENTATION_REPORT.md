@@ -424,7 +424,7 @@ Rate limiting remains a separate control, correctly scheduled for Days 18–23 a
 | Test | Result |
 |---|---|
 | `npm run typecheck` (`tsc --noEmit`, strict) | **PASS** — no errors |
-| `npm run build` | **PASS** — compiled in 2.7 s, 24/24 static pages, **0 warnings**, all 3 sample job pages still generated |
+| `npm run build` | **PASS** — compiled in 2.7 s, 24/24 routes generated, **0 warnings**, all 3 sample job pages still generated |
 | **Behavioural tests of the changed logic — 37 assertions** (Node 22 native TypeScript execution against the real modules) | **37 passed, 0 failed** |
 | Route status codes on a local production server | **PASS** — 8 published 200; 10 unpublished 404; unknown job slug, unknown publication slug, `/api/jobs`, `/directory`, `/performers`, `/portal`, `/admin` all 404 |
 | Security response headers | **PASS** — 4/4 present; `x-powered-by` absent |

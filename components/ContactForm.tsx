@@ -56,7 +56,12 @@ export function ContactForm() {
       <p className="text-muted">Fields marked required are needed to prepare your message.</p>
       {contactFields.map((field) => {
         const error = errorFor(field.name);
-        const describedBy = error ? `${field.name}-error` : field.help ? `${field.name}-help` : undefined;
+        // Both are announced when both exist: an error must not silence the
+        // field's guidance, which is often what explains how to fix it.
+        const describedBy =
+          [field.help ? `${field.name}-help` : null, error ? `${field.name}-error` : null]
+            .filter(Boolean)
+            .join(" ") || undefined;
 
         return (
           <div className="form-field" key={field.name}>
