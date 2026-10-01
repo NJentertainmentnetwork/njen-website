@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { ContentRequired } from "@/components/ContentRequired";
 import { PageHero } from "@/components/PageHero";
-import { requireSection, sectionRobots } from "@/lib/sections";
+import { requireSection, sectionCanonical, sectionRobots } from "@/lib/sections";
 
 // NOT IMPLEMENTED: accounts, sign-in, paid membership and checkout. Tier names,
 // pricing, billing and refund rules are owner decisions (Business Rules 6, 19).
@@ -9,6 +9,7 @@ export const metadata: Metadata = {
   title: "Membership",
   description: "NJEN membership information.",
   robots: sectionRobots("membership"),
+  alternates: sectionCanonical("membership"),
 };
 
 export default function Membership() {

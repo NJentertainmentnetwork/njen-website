@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { ContactForm } from "@/components/ContactForm";
 import { ContentRequired } from "@/components/ContentRequired";
 import { PageHero } from "@/components/PageHero";
-import { requireSection, sectionRobots } from "@/lib/sections";
+import { requireSection, sectionCanonical, sectionRobots } from "@/lib/sections";
 
 // This preview-only UI never sends or stores a submission. Delivery remains
 // blocked on C8, B6, Resend access, server validation, and rate limiting.
@@ -10,6 +10,7 @@ export const metadata: Metadata = {
   title: "Contact",
   description: "How to contact NJEN.",
   robots: sectionRobots("contact"),
+  alternates: sectionCanonical("contact"),
 };
 
 export default function Contact() {

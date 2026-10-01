@@ -71,6 +71,29 @@ export function sectionRobots(key: SectionKey): { index: boolean; follow: boolea
   return sections[key].published ? undefined : { index: false, follow: false };
 }
 
+/**
+ * Self-referencing canonical for a page.
+ *
+ * Two rules it exists to enforce:
+ *
+ * 1. Next.js INHERITS metadata, so a canonical declared on a layout silently
+ *    applies to every page beneath it. Declaring one centrally would tell search
+ *    engines that every page is a duplicate of that one URL. Each page therefore
+ *    declares its own.
+ * 2. Canonical URLs should be absolute, and the production domain is not
+ *    confirmed (register C13). Until NJEN_SITE_URL is set this returns
+ *    undefined, so no canonical is emitted at all and no domain is assumed -
+ *    the same rule the sitemap follows.
+ */
+export function canonicalFor(path: string): { canonical: string } | undefined {
+  return process.env.NJEN_SITE_URL ? { canonical: path } : undefined;
+}
+
+/** `canonicalFor` using the registry's own href, so it cannot drift. */
+export function sectionCanonical(key: SectionKey): { canonical: string } | undefined {
+  return canonicalFor(sections[key].href);
+}
+
 /** Call at the top of a section page. Returns 404 for unpublished sections. */
 export function requireSection(key: SectionKey): void {
   if (!isSectionVisible(key)) {

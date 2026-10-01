@@ -2,12 +2,13 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ContentRequired } from "@/components/ContentRequired";
 import { PageHero } from "@/components/PageHero";
-import { isSectionVisible, requireSection, sectionRobots, sections, type SectionKey } from "@/lib/sections";
+import { isSectionVisible, requireSection, sectionCanonical, sectionRobots, sections, type SectionKey } from "@/lib/sections";
 
 export const metadata: Metadata = {
   title: "Resources",
   description: "Education and practical resources for New Jersey's entertainment community.",
   robots: sectionRobots("resources"),
+  alternates: sectionCanonical("resources"),
 };
 
 // Resource areas confirmed for the initial public launch. Descriptions follow

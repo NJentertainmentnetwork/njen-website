@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import { PageHero } from "@/components/PageHero";
-import { requireSection, sectionRobots } from "@/lib/sections";
+import { requireSection, sectionCanonical, sectionRobots } from "@/lib/sections";
 
 export const metadata: Metadata = {
   title: "Career Center",
   description: "Career pathways, internships, education, and guidance for entertainment work in New Jersey.",
   robots: sectionRobots("careers"),
+  alternates: sectionCanonical("careers"),
 };
 
 // The three pathway cards describe areas named in the Release 1.3 documents.

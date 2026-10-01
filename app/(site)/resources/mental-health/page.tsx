@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { ContentRequired } from "@/components/ContentRequired";
 import { PageHero } from "@/components/PageHero";
-import { isSectionVisible, requireSection, sectionRobots, sections } from "@/lib/sections";
+import { isSectionVisible, requireSection, sectionCanonical, sectionRobots, sections } from "@/lib/sections";
 
 // CLIENT-CONFIRMED: Mental Health for Artists is part of the initial public
 // launch, within Resources. No medical claims, providers or emergency/crisis
@@ -10,6 +10,7 @@ export const metadata: Metadata = {
   title: "Mental Health for Artists",
   description: "Educational support information and external resources for artists.",
   robots: sectionRobots("mentalHealth"),
+  alternates: sectionCanonical("mentalHealth"),
 };
 
 export default function MentalHealthForArtists() {

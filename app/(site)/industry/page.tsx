@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { PageHero } from "@/components/PageHero";
-import { requireSection, sectionRobots } from "@/lib/sections";
+import { requireSection, sectionCanonical, sectionRobots } from "@/lib/sections";
 
 /**
  * CLIENT-CONFIRMED: public, informational entry point for production companies,
@@ -19,6 +19,7 @@ export const metadata: Metadata = {
   description:
     "Information for production companies, studios, streamers, producers, production managers and casting professionals.",
   robots: sectionRobots("industry"),
+  alternates: sectionCanonical("industry"),
 };
 
 // Business Rules, section 8.

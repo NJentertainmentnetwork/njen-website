@@ -4,7 +4,7 @@ import { JobFilters } from "@/components/JobFilters";
 import { PageHero } from "@/components/PageHero";
 import { SampleContentNotice } from "@/components/SampleContentNotice";
 import { JOB_FILTER_KEYS, JOBS_ARE_SAMPLE_DATA, getJobsView } from "@/lib/jobs";
-import { requireSection } from "@/lib/sections";
+import { canonicalFor, requireSection } from "@/lib/sections";
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
@@ -26,6 +26,9 @@ export async function generateMetadata({ searchParams }: { searchParams: SearchP
     description:
       "Entertainment work across New Jersey: studio, crew, theater, music, live event and support roles.",
     robots: JOBS_ARE_SAMPLE_DATA || isFiltered ? { index: false, follow: true } : undefined,
+    // Always the unfiltered index: a filtered view is the same listings under a
+    // query string, so it must point back at the one canonical jobs page.
+    alternates: canonicalFor("/jobs"),
   };
 }
 

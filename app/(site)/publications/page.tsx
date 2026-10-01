@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { PageHero } from "@/components/PageHero";
 import { getPublicPublications } from "@/lib/publications";
-import { requireSection, sectionRobots } from "@/lib/sections";
+import { requireSection, sectionCanonical, sectionRobots } from "@/lib/sections";
 
 // Public archive of NJEN-published issues. Members-only issues are post-launch
 // and are never queried or rendered here (see lib/publications.ts).
@@ -10,6 +10,7 @@ export const metadata: Metadata = {
   title: "Publications",
   description: "NJEN public publications and updates.",
   robots: sectionRobots("publications"),
+  alternates: sectionCanonical("publications"),
 };
 
 export default async function PublicationsPage() {

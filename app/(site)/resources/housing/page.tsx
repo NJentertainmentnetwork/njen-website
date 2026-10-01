@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { ContentRequired } from "@/components/ContentRequired";
 import { PageHero } from "@/components/PageHero";
-import { isSectionVisible, requireSection, sectionRobots, sections } from "@/lib/sections";
+import { isSectionVisible, requireSection, sectionCanonical, sectionRobots, sections } from "@/lib/sections";
 
 // CLIENT-CONFIRMED: Housing / Practical Resources is part of the initial public
 // launch. No providers, listings or claims are included until NJEN supplies them.
@@ -9,6 +9,7 @@ export const metadata: Metadata = {
   title: "Housing & Practical Resources",
   description: "Housing, rental and practical resource information for entertainment workers in New Jersey.",
   robots: sectionRobots("housing"),
+  alternates: sectionCanonical("housing"),
 };
 
 export default function HousingResources() {

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { ContentRequired } from "@/components/ContentRequired";
 import { PageHero } from "@/components/PageHero";
-import { requireSection, sectionRobots } from "@/lib/sections";
+import { requireSection, sectionCanonical, sectionRobots } from "@/lib/sections";
 
 // Business Rules section 11: a permanent, public, safety-first center. The
 // emphasis is safety, not monetization or influencer income.
@@ -9,6 +9,7 @@ export const metadata: Metadata = {
   title: "Social Media Safety",
   description: "Social media safety information for children, teens, parents and grandparents.",
   robots: sectionRobots("socialMediaSafety"),
+  alternates: sectionCanonical("socialMediaSafety"),
 };
 
 export default function SocialMediaSafety() {

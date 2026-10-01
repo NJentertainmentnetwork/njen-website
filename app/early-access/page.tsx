@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import { EarlyAccessForm } from "@/components/EarlyAccessForm";
+import { canonicalFor } from "@/lib/sections";
 
 /**
  * NJEN Early Access landing page.
@@ -52,6 +53,7 @@ export const metadata: Metadata = {
   title: "Early Access",
   description:
     "New Jersey's Entertainment Headquarters is coming. Join the NJEN early access list - free.",
+  alternates: canonicalFor("/early-access"),
 };
 
 export default function EarlyAccess() {

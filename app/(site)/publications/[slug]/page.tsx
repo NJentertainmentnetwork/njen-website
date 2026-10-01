@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { PageHero } from "@/components/PageHero";
 import { getPublicPublicationBySlug, getPublicPublicationSlugs } from "@/lib/publications";
-import { requireSection, sectionRobots, sections } from "@/lib/sections";
+import { canonicalFor, requireSection, sectionRobots, sections } from "@/lib/sections";
 
 // Only public issues are ever generated or served. The service filters by
 // visibility; members-only issues are post-launch and require authentication
@@ -12,12 +12,14 @@ export async function generateStaticParams() {
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
-  const publication = await getPublicPublicationBySlug((await params).slug);
+  const { slug } = await params;
+  const publication = await getPublicPublicationBySlug(slug);
 
   return {
     title: publication?.title ?? "Publication not found",
     description: publication?.summary,
     robots: publication ? sectionRobots("publications") : { index: false, follow: false },
+    alternates: canonicalFor(`/publications/${slug}`),
   };
 }
 

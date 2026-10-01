@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { PageHero } from "@/components/PageHero";
 import { SampleContentNotice } from "@/components/SampleContentNotice";
 import { JOBS_ARE_SAMPLE_DATA, getPublishedJobBySlug, getPublishedJobSlugs } from "@/lib/jobs";
-import { requireSection, sections } from "@/lib/sections";
+import { canonicalFor, requireSection, sections } from "@/lib/sections";
 
 export async function generateStaticParams() {
   const slugs = await getPublishedJobSlugs();
@@ -19,6 +19,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     description: job?.summary,
     // Sample listings (and unknown slugs) stay out of search results.
     robots: JOBS_ARE_SAMPLE_DATA || !job ? { index: false, follow: true } : undefined,
+    alternates: canonicalFor(`/jobs/${slug}`),
   };
 }
 

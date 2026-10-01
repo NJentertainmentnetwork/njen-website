@@ -1,9 +1,17 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { JobCard } from "@/components/JobCard";
 import { SampleContentNotice } from "@/components/SampleContentNotice";
 import { JOBS_ARE_SAMPLE_DATA, getPublishedJobs } from "@/lib/jobs";
-import { isSectionVisible, sections, type SectionKey } from "@/lib/sections";
+import { canonicalFor, isSectionVisible, sections, type SectionKey } from "@/lib/sections";
+
+// Title and description are inherited from the root layout. Only the canonical
+// is declared here, so the homepage points at itself rather than relying on an
+// inherited value that would also apply to every other page.
+export const metadata: Metadata = {
+  alternates: canonicalFor("/"),
+};
 
 const regions = ["North Jersey", "Central Jersey", "South Jersey", "The Shore"];
 

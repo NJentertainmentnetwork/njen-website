@@ -12,10 +12,15 @@ import "./globals.css";
 
 // metadataBase makes canonical and social URLs absolute. It stays unset until
 // NJEN confirms the production domain (register C13); no domain is assumed.
+//
+// NOTE: no `alternates.canonical` here. Next.js metadata is inherited, so a
+// canonical set on the root layout is applied to EVERY page that does not
+// override it. That previously declared every page a duplicate of the homepage.
+// Each page now sets its own self-referencing canonical instead.
 const siteUrl = process.env.NJEN_SITE_URL?.replace(/\/+$/, "");
 
 export const metadata: Metadata = {
-  ...(siteUrl ? { metadataBase: new URL(siteUrl), alternates: { canonical: "/" } } : {}),
+  ...(siteUrl ? { metadataBase: new URL(siteUrl) } : {}),
   title: {
     default: "NJEN | New Jersey's Entertainment Headquarters",
     template: "%s | NJEN",
