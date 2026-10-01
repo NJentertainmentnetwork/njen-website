@@ -1,7 +1,14 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { SiteHeader } from "@/components/SiteHeader";
-import { SiteFooter } from "@/components/SiteFooter";
+
+/**
+ * Root layout: the document shell only.
+ *
+ * Site chrome (header, mobile bar, footer) lives in the `(site)` route group
+ * layout, so standalone pages such as the Early Access campaign page can render
+ * without the main navigation. Route groups do not affect URLs: every existing
+ * path is unchanged.
+ */
 
 // metadataBase makes canonical and social URLs absolute. It stays unset until
 // NJEN confirms the production domain (register C13); no domain is assumed.
@@ -27,11 +34,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body>
-        <SiteHeader />
-        <main id="main">{children}</main>
-        <SiteFooter />
-      </body>
+      <body>{children}</body>
     </html>
   );
 }
