@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import { EarlyAccessForm } from "@/components/EarlyAccessForm";
+import { isSignupStorageConfigured } from "@/lib/early-access-store";
 import { canonicalFor } from "@/lib/sections";
 
 /**
@@ -16,17 +16,36 @@ import { canonicalFor } from "@/lib/sections";
  */
 
 /**
- * HERO ARTWORK SLOT - NOT FINAL.
+ * APPROVED HERO ARTWORK (supplied by NJEN, Day 15).
  *
- * The client is supplying the finished hero artwork separately. Until then the
- * hero is typographic, which stands on its own and avoids shipping an invented
- * or stock image.
+ * Two separately composed posters, not one image at two sizes: the mobile
+ * version re-flows the studio logos and the cast into a tall portrait frame.
+ * They are therefore served with `<picture>` and a `media` query rather than
+ * `next/image`, which has no art-direction support and would also download
+ * both files if they were toggled with CSS.
  *
- * To drop the artwork in: put the file in `public/`, set `heroArtwork` below,
- * and write real alt text. No other change is needed - the layout already
- * reserves and crops the space at every breakpoint.
+ * The artwork is used exactly as delivered - not recropped, retouched or
+ * overlaid. `object-fit` is never applied, so nothing in the composition can be
+ * cut off at any viewport; the poster simply scales.
  */
-const heroArtwork: { src: string; alt: string; width: number; height: number } | null = null;
+const artwork = {
+  mobile: { src: "/images/early-access/NJEN_Early_Access_Mobile_Hero.png", width: 404, height: 1024 },
+  desktop: { src: "/images/early-access/NJEN_Early_Access_Desktop_Hero.png", width: 1118, height: 1024 },
+  /** Viewport at which the desktop/tablet composition takes over. */
+  desktopFrom: "(min-width: 700px)",
+};
+
+/**
+ * Next.js image optimizer URL for a static asset.
+ *
+ * The approved PNGs are 0.8 MB and 2.2 MB. Routing them through the optimizer
+ * serves AVIF/WebP at the requested width instead, which matters a great deal
+ * on the mobile Facebook traffic this page is built for. `w` must be one of the
+ * configured device sizes, and the optimizer never upscales past the source.
+ */
+function optimized(src: string, width: number): string {
+  return `/_next/image?url=${encodeURIComponent(src)}&w=${width}&q=72`;
+}
 
 /** The four strongest hooks, in the client's own words. */
 const featured = [
@@ -57,39 +76,50 @@ export const metadata: Metadata = {
 };
 
 export default function EarlyAccess() {
+  // Resolved on the server. The form must never guess whether a signup can be
+  // kept; see lib/early-access.ts.
+  const storageEnabled = isSignupStorageConfigured();
+
   return (
     <main className="ea">
       <section className="ea-hero">
+        {/*
+          The page's one H1. The approved artwork carries this wording as pixels,
+          so it is repeated here as real text for screen readers, search engines
+          and anyone browsing with images off. The artwork is marked decorative
+          (alt="") precisely because this heading is its text equivalent -
+          giving both would make a screen reader read the same sentence twice.
+        */}
+        <h1 className="ea-sr-only">
+          Hollywood is all over New Jersey. NJEN - New Jersey&apos;s Entertainment Headquarters.
+        </h1>
+
+        <div className="ea-art">
+          <picture>
+            <source
+              media={artwork.desktopFrom}
+              srcSet={`${optimized(artwork.desktop.src, 1080)} 1080w, ${optimized(artwork.desktop.src, 1200)} 1200w`}
+              sizes="(min-width: 1140px) 1100px, 100vw"
+              width={artwork.desktop.width}
+              height={artwork.desktop.height}
+            />
+            <img
+              className="ea-art-img"
+              src={optimized(artwork.mobile.src, 640)}
+              alt=""
+              width={artwork.mobile.width}
+              height={artwork.mobile.height}
+              // Above the fold on every viewport: fetch it first, never lazily.
+              fetchPriority="high"
+              decoding="async"
+            />
+          </picture>
+        </div>
+
         <div className="ea-shell">
-          <Image
-            className="ea-logo"
-            src="/njen-logo.png"
-            alt="New Jersey Entertainment Network"
-            width={128}
-            height={130}
-            priority
-          />
-          <p className="ea-eyebrow">New Jersey · Film · Television · Entertainment</p>
-          <h1 className="ea-title">New Jersey&apos;s entertainment headquarters is coming</h1>
-          <p className="ea-lede">
-            Hollywood is all over New Jersey. Now there&apos;s one place to find your way into it.
-          </p>
           <a className="ea-cta" href="#signup">
             Join the NJEN early access list - free
           </a>
-
-          {heroArtwork ? (
-            <div className="ea-artwork">
-              <Image
-                src={heroArtwork.src}
-                alt={heroArtwork.alt}
-                width={heroArtwork.width}
-                height={heroArtwork.height}
-                sizes="(max-width: 860px) 100vw, 860px"
-                priority
-              />
-            </div>
-          ) : null}
         </div>
       </section>
 
@@ -122,7 +152,7 @@ export default function EarlyAccess() {
           <h2 className="ea-heading" id="signup-heading">
             Join the NJEN early access list - free
           </h2>
-          <EarlyAccessForm />
+          <EarlyAccessForm storageEnabled={storageEnabled} />
         </div>
       </section>
 

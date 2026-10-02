@@ -17,8 +17,8 @@
  * - No legal, consent or marketing wording is invented here; NJEN supplies it.
  */
 
-/** The three launch forms. */
-export type FormKind = "contact" | "newsletter" | "job-submission";
+/** The launch forms. */
+export type FormKind = "contact" | "newsletter" | "job-submission" | "early-access";
 
 export type FieldKind = "text" | "email" | "url" | "textarea" | "select" | "checkbox";
 
@@ -88,10 +88,26 @@ export const jobSubmissionFields: FieldDefinition[] = [
   { name: "closingDate", label: "Closing date", kind: "text", required: false, maxLength: 40 },
 ];
 
+/**
+ * Early Access signup (Day 15). Deliberately two fields: this is a conversion
+ * page for inbound social traffic, and every extra field costs signups.
+ *
+ * Separate from `newsletter` because the name IS required here - NJEN asked to
+ * capture it so Insider mail can be addressed properly - while the generic
+ * newsletter definition keeps it optional. `signedUpAt` and `source` are not
+ * listed: neither is typed by the visitor, and both are recorded server-side
+ * where they cannot be forged.
+ */
+export const earlyAccessFields: FieldDefinition[] = [
+  { name: "name", label: "Your name", kind: "text", required: true, maxLength: 120 },
+  { name: "email", label: "Email address", kind: "email", required: true, maxLength: 254 },
+];
+
 export const formFields: Record<FormKind, FieldDefinition[]> = {
   contact: contactFields,
   newsletter: newsletterFields,
   "job-submission": jobSubmissionFields,
+  "early-access": earlyAccessFields,
 };
 
 /**
