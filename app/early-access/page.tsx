@@ -68,11 +68,26 @@ const benefits = [
   "NJEN Insider - opportunities, production news, resources, events and useful NJ entertainment updates",
 ];
 
+const description =
+  "New Jersey's Entertainment Headquarters is coming. Join the NJEN early access list - free.";
+
 export const metadata: Metadata = {
   title: "Early Access",
-  description:
-    "New Jersey's Entertainment Headquarters is coming. Join the NJEN early access list - free.",
+  description,
   alternates: canonicalFor("/early-access"),
+  // This page's traffic arrives from a Facebook link, so the share card IS the
+  // first impression. The title is the approved headline already carried by the
+  // hero artwork and the page's own H1 - no new wording is introduced here.
+  //
+  // NO `images` YET: an Open Graph image must be an absolute URL (so it needs
+  // the confirmed production domain, register C13) and Facebook crops to
+  // 1.91:1. The approved hero is 1118x1024, so reusing it would cut the studio
+  // row off the top and the icon row off the bottom. A purpose-made 1200x630
+  // asset is register C12 - see the recommendation in the Day 15 report.
+  openGraph: {
+    title: "Hollywood is all over New Jersey",
+    description,
+  },
 };
 
 export default function EarlyAccess() {

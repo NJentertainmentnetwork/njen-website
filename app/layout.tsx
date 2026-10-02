@@ -28,11 +28,17 @@ export const metadata: Metadata = {
   description: "Entertainment jobs, events, careers, productions, and opportunities across New Jersey.",
   // Basic social/sharing metadata. No image is set: a share image needs the
   // production domain and an approved 1200x630 asset (register C12, C13).
+  //
+  // NOTE: no `title` or `description` here, for the same reason there is no
+  // `alternates.canonical`. Next.js INHERITS metadata, so an Open Graph title
+  // declared on the root layout is applied to every page that does not override
+  // it - which meant sharing /early-access, /jobs or /careers produced the
+  // homepage's generic card instead of the page's own. Left out, Next.js falls
+  // back to each page's `title` (with the template applied) and `description`,
+  // so every page shares correctly with no per-page declaration.
   openGraph: {
     type: "website",
     siteName: "NJEN",
-    title: "NJEN | New Jersey's Entertainment Headquarters",
-    description: "Entertainment jobs, events, careers, productions, and opportunities across New Jersey.",
   },
 };
 
