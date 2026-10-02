@@ -415,7 +415,11 @@ body { overflow-wrap: break-word; }
    Matches the `media` attribute on the <source>, so the reserved box and the
    file that lands in it always agree. */
 @media (min-width: 700px) {
-  .ea-art { max-width: 1100px; }
+  /* Full-bleed: the poster reaches both edges of the viewport rather than
+     sitting in a column with the hero gradient showing down either side.
+     `max-width: none` cancels the mobile cap; `margin-inline: auto` from the
+     base rule then has nothing left to centre. */
+  .ea-art { max-width: none; }
   .ea-art-img { aspect-ratio: 1118 / 1024; }
 }
 

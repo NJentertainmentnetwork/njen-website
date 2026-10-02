@@ -99,7 +99,9 @@ export default function EarlyAccess() {
             <source
               media={artwork.desktopFrom}
               srcSet={`${optimized(artwork.desktop.src, 1080)} 1080w, ${optimized(artwork.desktop.src, 1200)} 1200w`}
-              sizes="(min-width: 1140px) 1100px, 100vw"
+              // The poster is full-bleed from 700px up, so the slot is always
+              // the whole viewport.
+              sizes="100vw"
               width={artwork.desktop.width}
               height={artwork.desktop.height}
             />
