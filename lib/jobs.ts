@@ -66,11 +66,22 @@ export type PublicJob = {
 
 /**
  * True while listings come from sample data. Drives the "Example listings"
- * labelling and the `noindex` on jobs pages, so both disappear automatically
- * once real published jobs are used. Set to false in the same change that
- * switches this module to the CMS source.
+ * labelling shown with each card.
+ *
+ * FALSE SINCE DAY 16: the sample listings were removed at the client's request,
+ * so there is no example data left to label. Two things follow, both deliberate:
+ *
+ *  - the publication gate below becomes FAIL-CLOSED, so a record added to
+ *    data/jobs.ts without a moderation status can no longer be published. That
+ *    is the guarantee that test listings cannot reappear on the public site.
+ *  - indexing and sitemap inclusion no longer key off this flag. They now key
+ *    off whether any job is actually published, which is the real question -
+ *    see app/(site)/jobs/page.tsx and app/sitemap.ts.
+ *
+ * It stays as a constant because the "Example listing" badge and notice are
+ * still the correct mechanism if NJEN ever wants a labelled demo board again.
  */
-export const JOBS_ARE_SAMPLE_DATA = true;
+export const JOBS_ARE_SAMPLE_DATA = false;
 
 /**
  * A source record as it may arrive before it is trusted, with the staff-side

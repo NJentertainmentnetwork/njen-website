@@ -3,19 +3,22 @@ import { JobCard } from "@/components/JobCard";
 import { JobFilters } from "@/components/JobFilters";
 import { PageHero } from "@/components/PageHero";
 import { SampleContentNotice } from "@/components/SampleContentNotice";
-import { JOB_FILTER_KEYS, JOBS_ARE_SAMPLE_DATA, getJobsView } from "@/lib/jobs";
+import { JOB_FILTER_KEYS, JOBS_ARE_SAMPLE_DATA, getJobsView, getPublishedJobs } from "@/lib/jobs";
 import { canonicalFor, requireSection } from "@/lib/sections";
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
-// While listings are sample data the page stays out of search results. This
-// switches automatically once lib/jobs.ts serves real published jobs.
+// An EMPTY board stays out of search results. Indexing a page that says "no
+// current listings" earns nothing and is the first impression a searcher would
+// get of NJEN jobs. This is keyed off the real job count rather than off the
+// sample-data flag, so the page starts being indexed the moment NJEN publishes
+// its first listing - with no code change.
 //
 // A filtered view is also kept out of search results: the same listings under a
 // query string are a duplicate of /jobs, and only the unfiltered index should
 // ever be indexed. `follow: true` keeps the job links themselves crawlable.
 export async function generateMetadata({ searchParams }: { searchParams: SearchParams }): Promise<Metadata> {
-  const params = await searchParams;
+  const [params, published] = await Promise.all([searchParams, getPublishedJobs()]);
   const isFiltered = JOB_FILTER_KEYS.some((key) => {
     const value = params[key];
     return typeof value === "string" ? value.trim() !== "" : Array.isArray(value) && value.length > 0;
@@ -25,7 +28,7 @@ export async function generateMetadata({ searchParams }: { searchParams: SearchP
     title: "Jobs",
     description:
       "Entertainment work across New Jersey: studio, crew, theater, music, live event and support roles.",
-    robots: JOBS_ARE_SAMPLE_DATA || isFiltered ? { index: false, follow: true } : undefined,
+    robots: published.length === 0 || isFiltered ? { index: false, follow: true } : undefined,
     // Always the unfiltered index: a filtered view is the same listings under a
     // query string, so it must point back at the one canonical jobs page.
     alternates: canonicalFor("/jobs"),

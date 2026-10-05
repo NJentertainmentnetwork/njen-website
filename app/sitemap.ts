@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { JOBS_ARE_SAMPLE_DATA, getPublishedJobSlugs } from "@/lib/jobs";
+import { getPublishedJobSlugs } from "@/lib/jobs";
 import { getPublicPublicationSlugs } from "@/lib/publications";
 import { sections, type SectionKey } from "@/lib/sections";
 
@@ -12,8 +12,9 @@ import { sections, type SectionKey } from "@/lib/sections";
  *
  * Only genuinely indexable pages are listed:
  * - published sections only (never unpublished ones, and never staging previews);
- * - job pages only once real published jobs replace the sample data, because
- *   sample job pages are noindex.
+ * - the jobs index only once at least one job is published, and job pages only
+ *   for jobs that exist. An empty board is noindex, so listing it would
+ *   contradict the page's own robots directive.
  */
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = process.env.NJEN_SITE_URL?.replace(/\/+$/, "");
@@ -23,24 +24,24 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const now = new Date();
   const entries: MetadataRoute.Sitemap = [{ url: `${base}/`, lastModified: now }];
-  const publicationSlugs = await getPublicPublicationSlugs();
+  const [publicationSlugs, jobSlugs] = await Promise.all([
+    getPublicPublicationSlugs(),
+    getPublishedJobSlugs(),
+  ]);
 
   // `published` is used deliberately instead of the preview-aware helper, so a
   // staging preview build can never expose unpublished sections in a sitemap.
   for (const key of Object.keys(sections) as SectionKey[]) {
     const section = sections[key];
     if (!section.published) continue;
-    if (key === "jobs" && JOBS_ARE_SAMPLE_DATA) continue;
+    if (key === "jobs" && jobSlugs.length === 0) continue;
     // An empty archive is not worth indexing; list it once issues exist.
     if (key === "publications" && publicationSlugs.length === 0) continue;
     entries.push({ url: `${base}${section.href}`, lastModified: now });
   }
 
-  if (!JOBS_ARE_SAMPLE_DATA) {
-    const slugs = await getPublishedJobSlugs();
-    for (const slug of slugs) {
-      entries.push({ url: `${base}/jobs/${slug}`, lastModified: now });
-    }
+  for (const slug of jobSlugs) {
+    entries.push({ url: `${base}/jobs/${slug}`, lastModified: now });
   }
 
   // Public issues only: the service never returns members-only records.

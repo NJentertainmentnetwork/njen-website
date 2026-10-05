@@ -75,6 +75,20 @@ export const metadata: Metadata = {
   title: "Early Access",
   description,
   alternates: canonicalFor("/early-access"),
+  // NOINDEX - the client's explicit Day 16 instruction.
+  //
+  // This is a campaign page reached from a Facebook link, not a page anyone
+  // should find by searching. Keeping it out of the index also stops it
+  // competing with the homepage for "NJEN" and leaves no stale "coming soon"
+  // result behind once the full site launches.
+  //
+  // `follow: false` costs nothing: the only link on the page is the in-page
+  // #signup jump. Social sharing is unaffected - crawlers that build link
+  // previews read the Open Graph tags below and ignore robots directives.
+  //
+  // TO REVERSE: delete these two lines. The page is also absent from
+  // sitemap.xml, which lists registry sections only and never included it.
+  robots: { index: false, follow: false },
   // This page's traffic arrives from a Facebook link, so the share card IS the
   // first impression. The title is the approved headline already carried by the
   // hero artwork and the page's own H1 - no new wording is introduced here.

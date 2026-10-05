@@ -17,8 +17,11 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   return {
     title: job ? job.title : "Job not found",
     description: job?.summary,
-    // Sample listings (and unknown slugs) stay out of search results.
-    robots: JOBS_ARE_SAMPLE_DATA || !job ? { index: false, follow: true } : undefined,
+    // An unknown slug stays out of search results (the page 404s anyway).
+    // A real published job is indexable; there is no sample data left to
+    // suppress. Example-listing labelling is still applied below if the flag is
+    // ever turned back on for a demo board.
+    robots: job ? undefined : { index: false, follow: true },
     alternates: canonicalFor(`/jobs/${slug}`),
   };
 }
