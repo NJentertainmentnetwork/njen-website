@@ -101,6 +101,7 @@ export function EarlyAccessForm({ storageEnabled }: Props) {
           source,
           company: String(data.get("company") ?? ""),
           elapsedMs,
+          consent,
         }),
       });
 

@@ -82,6 +82,7 @@ export async function storeSignup(signup: EarlyAccessSignup): Promise<StoreResul
         p_email: signup.email,
         p_source: signup.source,
         p_signed_up_at: signup.signedUpAt,
+        p_consent_text: signup.consentText,
       }),
     });
 

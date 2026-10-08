@@ -27,6 +27,12 @@ export type EarlyAccessSignup = {
   signedUpAt: string;
   /** Campaign source, e.g. "facebook". Null when the visitor arrived directly. */
   source: string | null;
+  /**
+   * The approved consent wording the visitor agreed to, verbatim. Null when no
+   * wording is configured or the box was not ticked. Taken from the SERVER's
+   * copy of `EARLY_ACCESS_CONSENT`, never from text the browser sent.
+   */
+  consentText: string | null;
 };
 
 /** What the browser is allowed to send. The rest is derived server-side. */
@@ -38,6 +44,8 @@ export type EarlyAccessSubmission = {
   company: string;
   /** Milliseconds between render and submit. */
   elapsedMs: number;
+  /** Whether the consent box was ticked. Always false while no wording is configured. */
+  consent: boolean;
 };
 
 /** Outcome of a POST to /api/early-access, as the form understands it. */
