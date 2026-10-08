@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { validateSubmission } from "@/lib/forms";
 import {
+  EARLY_ACCESS_CONSENT,
   SIGNUP_RATE_LIMIT,
   SIGNUP_RATE_WINDOW_MS,
   type EarlyAccessResponse,
@@ -110,6 +111,16 @@ export async function POST(request: Request) {
     return json({ status: "invalid", errors: result.errors }, 400);
   }
 
+  // Consent is enforced here, not only in the browser. While NJEN has supplied
+  // no wording (EARLY_ACCESS_CONSENT is null) this is inert: nothing is required
+  // and nothing is recorded. The stored text is the server's own copy of the
+  // approved wording, so a client cannot record consent to words it invented.
+  const consented = body.consent === true;
+  if (EARLY_ACCESS_CONSENT?.required && !consented) {
+    return json({ status: "invalid", errors: [{ field: "consent", message: "Please tick the box to continue." }] }, 400);
+  }
+  const consentText = EARLY_ACCESS_CONSENT && consented ? EARLY_ACCESS_CONSENT.text : null;
+
   // `source` is a campaign label, not a field the visitor filled in, so it is
   // length-capped and otherwise taken as-is. Anything longer is a malformed or
   // hostile client and is simply dropped rather than rejected.
@@ -127,6 +138,7 @@ export async function POST(request: Request) {
     // Server clock. A browser-supplied timestamp can be anything.
     signedUpAt: new Date().toISOString(),
     source,
+    consentText,
   });
 
   if (!stored.ok) {
