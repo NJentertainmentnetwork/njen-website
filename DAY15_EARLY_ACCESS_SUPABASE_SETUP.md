@@ -8,6 +8,24 @@ environment variables below are present.
 > **The developer cannot complete this.** Every step needs NJEN-owned account
 > access. Steps 1–4 take about fifteen minutes in total.
 
+> **Day 20 update (09-10-2026) — read before Step 1.** NJEN reports that it
+> already has a Supabase project with a table named `early_access_leads`. This
+> checklist was written for a new project and does not know about that table:
+> nothing in the website reads or writes `early_access_leads`. **Do not run
+> Step 2 yet.** First run the read-only inspection queries in
+> `DAY20_IMPLEMENTATION_REPORT.md` §3 and send back the results; the developer
+> then proposes one exact database change for approval. Three corrections to
+> the text below:
+> - Step 1's "the free tier is sufficient" is true for **volume only**. Free
+>   projects can be paused after a week of low activity and have no automatic
+>   backups — see `DAY20_IMPLEMENTATION_REPORT.md` §4 before sending traffic.
+> - Step 3: Supabase now issues **secret keys** (`sb_secret_...`) alongside the
+>   legacy `service_role` key and is deprecating the legacy keys by the end of
+>   2026. The code sends either format in `SUPABASE_SERVICE_ROLE_KEY` the way
+>   Supabase documents (Day 20 code change; tested against a local mock only,
+>   not a live project). Prefer the secret key.
+> - Step 5 now has a fuller test list: `LAUNCH_QA_CHECKLIST.md` §6.
+
 ---
 
 ## What was built, so the setup is this short

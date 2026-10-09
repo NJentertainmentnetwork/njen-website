@@ -38,6 +38,27 @@ const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const RPC = "record_early_access_signup";
 
 /**
+ * Auth headers for the Supabase REST API, for either key format.
+ *
+ * Supabase issues two kinds of server key. The legacy `service_role` key is a
+ * JWT and has always been sent on both `apikey` and `Authorization: Bearer`.
+ * The newer secret key (`sb_secret_...`) is NOT a JWT, and Supabase's API-key
+ * guide says to send it on `apikey` only, not on `Authorization: Bearer`,
+ * because anything that tries to verify it as a JWT fails. Supabase is
+ * deprecating the legacy keys by the end of 2026, so NJEN's project may only
+ * offer the new kind. Whichever one is put in `SUPABASE_SERVICE_ROLE_KEY`, this
+ * sends it the documented way.
+ *
+ * Only the secret-key prefix is matched. A publishable key (`sb_publishable_`)
+ * is a browser key with no write access and does not belong here; it falls
+ * through to the legacy branch, is rejected by Supabase, and the signup fails
+ * with the usual "not saved" message rather than appearing to work.
+ */
+function authHeaders(key: string): Record<string, string> {
+  return key.startsWith("sb_secret_") ? { apikey: key } : { apikey: key, Authorization: `Bearer ${key}` };
+}
+
+/**
  * True only when a real, writable destination exists.
  *
  * The page and the route both branch on this. It must never be optimistic: if
@@ -74,8 +95,7 @@ export async function storeSignup(signup: EarlyAccessSignup): Promise<StoreResul
       signal: AbortSignal.timeout(8000),
       headers: {
         "Content-Type": "application/json",
-        apikey: SERVICE_ROLE_KEY,
-        Authorization: `Bearer ${SERVICE_ROLE_KEY}`,
+        ...authHeaders(SERVICE_ROLE_KEY),
       },
       body: JSON.stringify({
         p_name: signup.name,
