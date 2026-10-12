@@ -155,6 +155,8 @@ end $$;
 
 ### 3.5 Read-only inspection queries for Raphael
 
+> **Superseded on Day 21 (12-10-2026):** send NJEN `docs/NJEN_SUPABASE_READ_ONLY_INSPECTION_GUIDE.md` instead. It contains a tested, extended version of these queries with step-by-step instructions. The set below is kept as the Day 20 record.
+
 Run in **Supabase → SQL Editor**. Every statement is a `select`. They change nothing, and none returns a name or email. Please send back the output (screenshots or CSV).
 
 ```sql

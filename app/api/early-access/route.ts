@@ -77,6 +77,41 @@ function json(body: EarlyAccessResponse, status: number) {
   return NextResponse.json(body, { status });
 }
 
+/**
+ * Reads the body as text, stopping as soon as it passes `MAX_BODY_BYTES`.
+ *
+ * The `content-length` check in POST is only a fast path: a chunked request
+ * carries no such header, and `request.json()` would then buffer and parse
+ * whatever arrives. Counting the bytes actually read is what enforces the cap.
+ * Returns null when the body is too large.
+ */
+async function readCappedBody(request: Request): Promise<string | null> {
+  if (!request.body) return "";
+
+  const reader = request.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    total += value.byteLength;
+    if (total > MAX_BODY_BYTES) {
+      await reader.cancel();
+      return null;
+    }
+    chunks.push(value);
+  }
+
+  const bytes = new Uint8Array(total);
+  let offset = 0;
+  for (const chunk of chunks) {
+    bytes.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  return new TextDecoder().decode(bytes);
+}
+
 export async function POST(request: Request) {
   if (rateLimited(clientKey(request))) {
     return json({ status: "rate-limited" }, 429);
@@ -89,7 +124,11 @@ export async function POST(request: Request) {
 
   let payload: unknown;
   try {
-    payload = await request.json();
+    const text = await readCappedBody(request);
+    if (text === null) {
+      return json({ status: "invalid", errors: [{ field: "form", message: "Request too large." }] }, 413);
+    }
+    payload = JSON.parse(text);
   } catch {
     return json({ status: "invalid", errors: [{ field: "form", message: "Invalid request." }] }, 400);
   }
