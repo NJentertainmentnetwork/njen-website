@@ -25,6 +25,10 @@ environment variables below are present.
 >   Supabase documents (Day 20 code change; tested against a local mock only,
 >   not a live project). Prefer the secret key.
 > - Step 5 now has a fuller test list: `LAUNCH_QA_CHECKLIST.md` §6.
+>
+> **Day 22 update (13-10-2026):**
+> - Step 5.3's `select *` displays names and emails. Use the **count-only** query in `docs/NJEN_EARLY_ACCESS_DEPLOYMENT_READINESS.md` §5 instead, especially on a screen share.
+> - Step 2's migrations can be rehearsed first on a developer-owned test project: `docs/NJEN_DEV_SUPABASE_TEST_SETUP.md`.
 
 ---
 

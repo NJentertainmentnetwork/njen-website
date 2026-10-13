@@ -1,5 +1,7 @@
 # NJEN — Day 21 Client Actions
 
+> **Superseded on 13-10-2026 by `docs/NJEN_DAY22_CLIENT_ACTIONS.md`.** Kept as a record.
+
 **Prepared 12-10-2026.** Only the items that unblock real work, in priority order. Each says what is needed, why, and what it costs. **Nothing here has been approved yet.**
 
 ## A. Needed now (blocks the first real test signup)

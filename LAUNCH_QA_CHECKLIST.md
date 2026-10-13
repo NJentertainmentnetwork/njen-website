@@ -80,6 +80,10 @@ Nothing marked PENDING, POST-INFRASTRUCTURE or FINAL PRE-LAUNCH has been perform
 
 Run this list on the **deployed** Early Access page before any Facebook or paid traffic is sent to it. "Local result" is what was verified on Days 19-20 against a local `next start` build. **Every test marked PENDING has not been performed.** Do not treat a local result as the deployed result.
 
+**Day 22 (13-10-2026):**
+- Before the deployed run, the same API checks can be run against a **local** build with `node scripts/early-access-live-check.mjs` (refuses non-localhost URLs). Against the developer's own test Supabase project, follow `docs/NJEN_DEV_SUPABASE_TEST_SETUP.md`.
+- A pass there is the "developer-owned test Supabase" milestone only. It does **not** tick any "Deployed" cell below.
+
 **Prerequisites:** NJEN approves the database change (`DAY20_IMPLEMENTATION_REPORT.md` §3). `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are set in the **official** Vercel project (D2a), and that project has been **redeployed**. Use a test address NJEN controls, delete the test row afterwards, and never paste a real visitor's details into a ticket, chat or report.
 
 | # | Test | How | Pass when | Local result | Deployed |

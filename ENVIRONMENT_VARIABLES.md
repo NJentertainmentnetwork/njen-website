@@ -40,6 +40,11 @@ These three are optional and change behaviour only when set. All are **server-on
 
 **Both Supabase variables must be set together, and the site must be redeployed afterwards.** `/early-access` is statically generated, so whether it shows the "Preview only" notice is decided **at build time**. Verified locally on Day 20: a build with both variables set has no notice; a build without them does. Setting the variables without redeploying leaves the old page in place.
 
+**Local development (Day 22, 13-10-2026).**
+- The developer may put the same two names in a local `.env.local` pointing at **a developer-owned test Supabase project**, never NJEN's. `.gitignore` excludes `.env.*` except `.env.example`.
+- `.env.example` keeps placeholders only.
+- Setup and test steps: `docs/NJEN_DEV_SUPABASE_TEST_SETUP.md`.
+
 **Configured is not the same as working.** Setting the variables only makes the site *attempt* storage. A real signup is collected only when the database function `public.record_early_access_signup` exists in NJEN's project and accepts the call. If it does not (for example, the migration was never applied), every signup fails safely: the visitor is told it was not saved, and the server logs `[early-access] signup store failed: HTTP <status>` with no personal data. See `DAY20_IMPLEMENTATION_REPORT.md` §3 for the compatibility check against NJEN's existing `early_access_leads` table.
 
 | State | Page shows | API answer | Stored? |

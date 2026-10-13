@@ -33,6 +33,10 @@ Either the Supabase CLI (`supabase db push`) or `psql -f`, run from CI or locall
 
 **Day 20 (09-10-2026) — do not apply 0002 to NJEN's existing project without approval.** NJEN reports that its Supabase project already has a table named `early_access_leads`, which nothing in this repository creates or reads. Run the read-only inspection in `DAY20_IMPLEMENTATION_REPORT.md` §3 first; the options there decide whether 0002 is applied as written or replaced by a smaller adapter.
 
+**Day 22 (13-10-2026):**
+- 0001 and 0002 may be applied to a **developer-owned test Supabase project** (never NJEN's) to verify the integration; see `docs/NJEN_DEV_SUPABASE_TEST_SETUP.md`. The "Applied?" column above refers to NJEN's database and is unchanged.
+- **Open conflict, not yet decided:** 0001's closing comment (ARCH-1) recommends removing `public` from Supabase's exposed schemas. `public.record_early_access_signup` is reached through that same Data API, so doing so would stop Early Access signups. Keep `public` exposed until the decision in `DAY22_IMPLEMENTATION_REPORT.md` §6 is made. The migration files are unchanged.
+
 **Apart from Early Access, there are no launch tables, and that is correct.** All other 30-day launch data is editorial content owned by Payload, which creates its own tables. Application tables arrive with the post-launch phases in `POST_LAUNCH_DEVELOPMENT_ASSESSMENT.md` and are **not** written now.
 
 ## Conventions for future application tables (from `DATABASE_AND_ROLE_MODEL.md`)
