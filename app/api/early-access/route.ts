@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { validateSubmission } from "@/lib/forms";
 import {
   EARLY_ACCESS_CONSENT,
+  normaliseSignupSource,
   SIGNUP_RATE_LIMIT,
   SIGNUP_RATE_WINDOW_MS,
   type EarlyAccessResponse,
@@ -160,11 +161,10 @@ export async function POST(request: Request) {
   }
   const consentText = EARLY_ACCESS_CONSENT && consented ? EARLY_ACCESS_CONSENT.text : null;
 
-  // `source` is a campaign label, not a field the visitor filled in, so it is
-  // length-capped and otherwise taken as-is. Anything longer is a malformed or
-  // hostile client and is simply dropped rather than rejected.
-  const rawSource = typeof body.source === "string" ? body.source.trim() : "";
-  const source = rawSource && rawSource.length <= 64 ? rawSource : null;
+  // `source` is a campaign label, not a field the visitor filled in. Anything
+  // too long or outside the safe label shape (see normaliseSignupSource) is a
+  // malformed or hostile client and is dropped rather than rejected.
+  const source = normaliseSignupSource(body.source);
 
   if (!isSignupStorageConfigured()) {
     // Valid, but there is nowhere to put it. Say so; never pretend.

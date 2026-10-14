@@ -101,13 +101,93 @@ export function readSignupSource(search: string, referrer: string): string | nul
   const params = new URLSearchParams(search);
 
   for (const key of SOURCE_KEYS) {
-    const value = params.get(key)?.trim();
-    if (value) return value.slice(0, 64);
+    const value = normaliseSignupSource(params.get(key)?.slice(0, 64));
+    if (value) return value;
   }
 
   try {
-    return referrer ? new URL(referrer).hostname : null;
+    return referrer ? normaliseSignupSource(new URL(referrer).hostname) : null;
   } catch {
     return null;
   }
+}
+
+/** Longest campaign label kept. Matches the column check in migration 0002. */
+export const MAX_SOURCE_LENGTH = 64;
+
+/**
+ * A campaign label is letters, digits and `. _ - : / +` or spaces, starting
+ * with a letter or digit. That covers every realistic `utm_source` value
+ * ("facebook", "fb_ads", "l.facebook.com", "spring-2027") and referrer hosts.
+ *
+ * The leading-character rule is the point: a label beginning with `=`, `+`,
+ * `-` or `@` is read as a FORMULA when NJEN opens an exported CSV in Excel or
+ * Google Sheets. `source` is the one stored field a stranger controls just by
+ * editing a link, so it is held to a strict shape. Names are not: a name field
+ * must accept what people type, and is handled at export time instead (see
+ * docs/NJEN_SUPABASE_STATUS_AND_COMPATIBILITY.md §6).
+ */
+const SOURCE_PATTERN = /^[\p{L}\p{N}][\p{L}\p{N} ._:/+-]*$/u;
+
+/**
+ * Returns a safe campaign label, or null. Used by the browser (to choose what
+ * to send) and by the server (which never trusts what was sent). Anything that
+ * does not fit is dropped, not rejected: a broken campaign link must not stop
+ * a person signing up.
+ */
+export function normaliseSignupSource(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  const text = value.trim();
+  if (!text || text.length > MAX_SOURCE_LENGTH) return null;
+  return SOURCE_PATTERN.test(text) ? text : null;
+}
+
+/** What the form shows after a submission. Pure, so every branch is testable. */
+export type SignupOutcome =
+  /** A row was stored. The only outcome that may say "you're in". */
+  | { kind: "stored" }
+  /** Valid, but storage is off. Must say nothing was saved. */
+  | { kind: "preview" }
+  /** The server rejected fields. `errors` may hold only a "form" entry. */
+  | { kind: "invalid"; errors: { field: string; message: string }[] }
+  /** Not saved, for any other reason. `message` is shown as-is. */
+  | { kind: "failed"; message: string };
+
+/** Visitor-facing failure messages. Each says plainly that nothing was saved. */
+export const SIGNUP_FAILURE_MESSAGES = {
+  rateLimited: "Too many attempts. Please wait a few minutes and try again.",
+  serverError: "Something went wrong at our end and your signup was not saved. Please try again shortly.",
+  network: "We could not reach the server, so your signup was not saved. Please check your connection and try again.",
+} as const;
+
+/**
+ * Maps the API's JSON body to what the visitor sees.
+ *
+ * `body` is whatever `response.json()` produced, or null when the response was
+ * not JSON at all (a platform error page, a proxy timeout). Anything that is
+ * not a recognised, well-formed answer is a failure: the form must never fall
+ * through to a success screen by accident.
+ */
+export function interpretSignupResponse(body: unknown): SignupOutcome {
+  const status = typeof body === "object" && body !== null ? (body as { status?: unknown }).status : undefined;
+
+  if (status === "stored") return { kind: "stored" };
+  if (status === "not-configured") return { kind: "preview" };
+  if (status === "rate-limited") return { kind: "failed", message: SIGNUP_FAILURE_MESSAGES.rateLimited };
+
+  if (status === "invalid") {
+    const raw = (body as { errors?: unknown }).errors;
+    const errors = Array.isArray(raw)
+      ? raw.filter(
+          (error): error is { field: string; message: string } =>
+            typeof error === "object" &&
+            error !== null &&
+            typeof (error as { field?: unknown }).field === "string" &&
+            typeof (error as { message?: unknown }).message === "string",
+        )
+      : [];
+    if (errors.length > 0) return { kind: "invalid", errors };
+  }
+
+  return { kind: "failed", message: SIGNUP_FAILURE_MESSAGES.serverError };
 }

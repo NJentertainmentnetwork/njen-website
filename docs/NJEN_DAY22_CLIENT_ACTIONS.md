@@ -2,6 +2,8 @@
 
 **Prepared 13-10-2026.** This replaces `docs/NJEN_DAY21_CLIENT_ACTIONS.md` as the current list. Nothing from Day 21 has been answered yet, so the items carry over, sharpened by Day 22's findings. **Nothing here has been approved.**
 
+> **Day 23 (14-10-2026):** the single next action is now in `docs/NJEN_DAY23_NEXT_CLIENT_ACTION.md`: create one new, private Vercel project from the official repository. It replaces items 1 and 2 below for now. The other items still stand.
+
 > **Please never send passwords, API keys, the service-role or secret key, database connection strings, or exports of real signups** by chat or email. Every action below returns names, settings, counts or yes/no answers only.
 
 The developer is testing the code against **a separate Supabase project in the developer's own account**. That proves the code works against real Supabase. It does **not** touch NJEN's database, and it doesn't remove any item below.

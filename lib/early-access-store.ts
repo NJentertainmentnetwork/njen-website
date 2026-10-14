@@ -31,8 +31,57 @@ import type { EarlyAccessSignup } from "@/lib/early-access";
  * The key is never passed to a client component and never logged.
  */
 
-const SUPABASE_URL = process.env.SUPABASE_URL?.replace(/\/+$/, "");
-const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+/**
+ * Reads and checks the two variables. Returns null unless BOTH are usable.
+ *
+ * Read on each call rather than once at module load, so the tests can exercise
+ * each configuration without restarting the process. The cost is two property
+ * reads per signup.
+ *
+ * Values are trimmed: a key pasted into a hosting dashboard with a trailing
+ * space or newline would otherwise make every request fail as an invalid
+ * header, while the page claimed storage was on.
+ *
+ * Settings that cannot possibly work are treated as NOT configured, so the page
+ * shows its "Preview only" notice instead of accepting signups that will all
+ * fail. That makes a misconfiguration visible on the first post-deploy check:
+ * - a URL that is not https (plain http is allowed for localhost only, which
+ *   the local mock tests use);
+ * - a browser key in the server-key variable: a publishable key
+ *   (`sb_publishable_...`) or a legacy JWT whose role is `anon` or
+ *   `authenticated`. Neither can call the function, which is service_role only.
+ */
+function readConfig(): { url: string; key: string } | null {
+  const rawUrl = process.env.SUPABASE_URL?.trim().replace(/\/+$/, "");
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
+  if (!rawUrl || !key) return null;
+
+  let url: URL;
+  try {
+    url = new URL(rawUrl);
+  } catch {
+    return null;
+  }
+  const local = url.hostname === "localhost" || url.hostname === "127.0.0.1" || url.hostname === "[::1]";
+  if (url.protocol !== "https:" && !(local && url.protocol === "http:")) return null;
+
+  if (key.startsWith("sb_publishable_") || isBrowserJwt(key)) return null;
+
+  return { url: rawUrl, key };
+}
+
+/** True for a legacy JWT key whose `role` claim is a browser role. */
+function isBrowserJwt(key: string): boolean {
+  const parts = key.split(".");
+  if (parts.length !== 3) return false;
+  try {
+    const payload = JSON.parse(atob(parts[1].replace(/-/g, "+").replace(/_/g, "/"))) as { role?: unknown };
+    return payload.role === "anon" || payload.role === "authenticated";
+  } catch {
+    // Not decodable: let Supabase decide. A rejected key fails as "not saved".
+    return false;
+  }
+}
 
 /** Postgres function that accepts a signup. Defined in migration 0002. */
 const RPC = "record_early_access_signup";
@@ -50,9 +99,8 @@ const RPC = "record_early_access_signup";
  * sends it the documented way.
  *
  * Only the secret-key prefix is matched. A publishable key (`sb_publishable_`)
- * is a browser key with no write access and does not belong here; it falls
- * through to the legacy branch, is rejected by Supabase, and the signup fails
- * with the usual "not saved" message rather than appearing to work.
+ * is a browser key with no write access and does not belong here; `readConfig`
+ * rejects it, so storage reads as not configured.
  */
 function authHeaders(key: string): Record<string, string> {
   return key.startsWith("sb_secret_") ? { apikey: key } : { apikey: key, Authorization: `Bearer ${key}` };
@@ -66,7 +114,7 @@ function authHeaders(key: string): Record<string, string> {
  * when they did not.
  */
 export function isSignupStorageConfigured(): boolean {
-  return Boolean(SUPABASE_URL && SERVICE_ROLE_KEY);
+  return readConfig() !== null;
 }
 
 export type StoreResult =
@@ -82,20 +130,21 @@ export type StoreResult =
  * NJEN still holds exactly one row.
  */
 export async function storeSignup(signup: EarlyAccessSignup): Promise<StoreResult> {
-  if (!SUPABASE_URL || !SERVICE_ROLE_KEY) {
+  const config = readConfig();
+  if (!config) {
     return { ok: false, reason: "provider-error" };
   }
 
   try {
     // A signup that has not completed in 8 seconds is not going to; failing
     // fast keeps the serverless function from hanging on a provider outage.
-    const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${RPC}`, {
+    const response = await fetch(`${config.url}/rest/v1/rpc/${RPC}`, {
       method: "POST",
       cache: "no-store",
       signal: AbortSignal.timeout(8000),
       headers: {
         "Content-Type": "application/json",
-        ...authHeaders(SERVICE_ROLE_KEY),
+        ...authHeaders(config.key),
       },
       body: JSON.stringify({
         p_name: signup.name,

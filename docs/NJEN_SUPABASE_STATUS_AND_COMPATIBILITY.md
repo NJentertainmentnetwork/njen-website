@@ -118,4 +118,6 @@ Each eventual proposal will state: the exact SQL, why, what it touches, cost ($0
 
 Lead lists are usually exported to CSV and opened in Excel or Google Sheets. A "name" that begins with `=`, `+`, `-` or `@` can be interpreted as a formula when the CSV is opened. This is the well-known CSV-injection risk. The form accepts any characters in the name (up to 120), as a name field reasonably should.
 
-**Recommendation (no change made):** when exporting, open the CSV with "import as text", or review it before opening. If NJEN wants it handled in code, that is a small, separate change to propose: either a check in the form validation, or neutralising at export time.
+**Day 23:** the campaign `source`, which anyone can set by editing a link, is now limited to a plain label shape and can no longer start with a formula character (`docs/NJEN_DAY23_EARLY_ACCESS_COMPATIBILITY.md` §6). Names are unchanged.
+
+**Recommendation for names (no change made):** when exporting, open the CSV with "import as text", or review it before opening. If NJEN wants it handled in code, that is a small, separate change to propose: either a check in the form validation, or neutralising at export time.

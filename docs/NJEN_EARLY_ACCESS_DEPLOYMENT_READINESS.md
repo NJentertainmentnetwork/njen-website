@@ -31,6 +31,7 @@ The variable reference is `ENVIRONMENT_VARIABLES.md`. The full post-deploy test 
 
 Rules:
 - Both or neither: with only one set, storage stays off.
+- Since Day 23, stray spaces or a trailing newline in either value are ignored. Storage also stays off (page shows "Preview only") if the URL is not `https://` or the key is a browser key (`sb_publishable_…` or a legacy `anon` key). So if "Preview only" still shows after setting both and redeploying, check those first.
 - **Never** use a `NEXT_PUBLIC_` name for either. That would publish the key in the browser.
 - Type the values only into Vercel's Environment Variables screen. Never paste them in email, chat, tickets, screenshots or repository files.
 - **Who sets them:** on Vercel Pro, the **Developer** role *cannot* change Production environment variables; Owners and Members can (Vercel docs, read 12-10-2026). So NJEN sets them. This also means the developer never needs to see the key.

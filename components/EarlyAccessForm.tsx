@@ -4,8 +4,9 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import { earlyAccessFields, validateSubmission, type FieldError } from "@/lib/forms";
 import {
   EARLY_ACCESS_CONSENT,
+  interpretSignupResponse,
   readSignupSource,
-  type EarlyAccessResponse,
+  SIGNUP_FAILURE_MESSAGES,
 } from "@/lib/early-access";
 
 /**
@@ -105,28 +106,27 @@ export function EarlyAccessForm({ storageEnabled }: Props) {
         }),
       });
 
-      const body = (await response.json()) as EarlyAccessResponse;
+      // A reply that is not JSON (a platform error page, a proxy timeout) is a
+      // server-side failure, not a connection problem; it maps to "not saved".
+      const body: unknown = await response.json().catch(() => null);
+      const outcome = interpretSignupResponse(body);
 
-      if (body.status === "stored") {
+      if (outcome.kind === "stored") {
         setStatus("stored");
         return;
       }
-      if (body.status === "not-configured") {
+      if (outcome.kind === "preview") {
         // Deliberately NOT presented as success: nothing was saved.
         setStatus("preview");
         return;
       }
-      if (body.status === "invalid") {
-        fail(body.errors, "Please correct the highlighted fields.");
+      if (outcome.kind === "invalid") {
+        fail(outcome.errors, "Please correct the highlighted fields.");
         return;
       }
-      if (body.status === "rate-limited") {
-        fail([], "Too many attempts. Please wait a few minutes and try again.");
-        return;
-      }
-      fail([], "Something went wrong at our end and your signup was not saved. Please try again shortly.");
+      fail([], outcome.message);
     } catch {
-      fail([], "We could not reach the server, so your signup was not saved. Please check your connection and try again.");
+      fail([], SIGNUP_FAILURE_MESSAGES.network);
     }
   }
 
