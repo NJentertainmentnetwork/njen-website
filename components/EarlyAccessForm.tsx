@@ -38,11 +38,39 @@ export function EarlyAccessForm({ storageEnabled }: Props) {
   const [formMessage, setFormMessage] = useState<string | null>(null);
   const [source, setSource] = useState<string | null>(null);
   const [consent, setConsent] = useState(false);
+  const resultHeading = useRef<HTMLHeadingElement>(null);
+  const submitButton = useRef<HTMLButtonElement>(null);
+  /** Where keyboard focus goes once the next render has committed. */
+  const focusAfterRender = useRef<string | null>(null);
 
   // Read once on mount: the campaign source is only knowable in the browser.
   useEffect(() => {
     setSource(readSignupSource(window.location.search, document.referrer));
   }, []);
+
+  // The result screens replace the form, taking the focused control with it.
+  // Moving focus to the result heading keeps keyboard users in place and has a
+  // screen reader read the outcome, which a status region inserted together
+  // with its text does not reliably do.
+  useEffect(() => {
+    if (status === "stored" || status === "preview") resultHeading.current?.focus();
+  }, [status]);
+
+  // Deferred until after the render because the fields and the button are
+  // disabled while a request is in flight, and focusing a disabled control does
+  // nothing. Focusing straight from the response handler left focus on the
+  // page body, even when the server had flagged a field.
+  useEffect(() => {
+    const target = focusAfterRender.current;
+    if (!target) return;
+    focusAfterRender.current = null;
+    if (target === "submit") {
+      // Only when focus was lost with the disabled button; never steal it.
+      if (!document.activeElement || document.activeElement === document.body) submitButton.current?.focus();
+      return;
+    }
+    document.getElementById(target)?.focus();
+  });
 
   function errorFor(name: string) {
     return errors.find((error) => error.field === name)?.message;
@@ -61,9 +89,10 @@ export function EarlyAccessForm({ storageEnabled }: Props) {
     setFormMessage(fieldLevel.length > 0 ? message : (formLevel?.message ?? message));
     setStatus("idle");
 
-    // Take keyboard and screen reader users straight to what needs fixing.
-    const first = fieldLevel[0]?.field;
-    if (first) document.getElementById(first)?.focus();
+    // Take keyboard and screen reader users straight to what needs fixing, or
+    // back to the button when there is nothing to fix; the message itself is
+    // announced by the alert region.
+    focusAfterRender.current = fieldLevel[0]?.field ?? "submit";
   }
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
@@ -134,7 +163,9 @@ export function EarlyAccessForm({ storageEnabled }: Props) {
   if (status === "stored") {
     return (
       <div className="ea-success" role="status">
-        <h3 className="ea-success-title">You&apos;re in. Welcome to NJEN.</h3>
+        <h3 className="ea-success-title" ref={resultHeading} tabIndex={-1}>
+          You&apos;re in. Welcome to NJEN.
+        </h3>
         <p>
           Watch your email for NJEN Insider updates, directories, opportunities, special offers, event
           announcements and information about our official launch.
@@ -147,7 +178,9 @@ export function EarlyAccessForm({ storageEnabled }: Props) {
   if (status === "preview") {
     return (
       <div className="ea-success" role="status">
-        <h3 className="ea-success-title">Checked - but not saved</h3>
+        <h3 className="ea-success-title" ref={resultHeading} tabIndex={-1}>
+          Checked - but not saved
+        </h3>
         <p className="ea-notice ea-notice-inline">
           <strong>Preview only.</strong> The early access list is not connected yet, so{" "}
           <strong>your details were not saved or sent anywhere</strong>. This screen is here so the wording and
@@ -231,7 +264,7 @@ export function EarlyAccessForm({ storageEnabled }: Props) {
         </div>
       ) : null}
 
-      <button className="ea-submit" type="submit" disabled={submitting}>
+      <button className="ea-submit" type="submit" disabled={submitting} ref={submitButton}>
         {submitting ? "Sending…" : "Get early access"}
       </button>
 

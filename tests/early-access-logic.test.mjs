@@ -173,6 +173,22 @@ describe("interpretSignupResponse (what the visitor is told)", () => {
     assert.deepEqual(interpretSignupResponse({ status: "invalid", errors }), { kind: "invalid", errors });
   });
 
+  it("passes a form-level rejection through, so the guard's message is shown", () => {
+    const errors = [{ field: "form", message: "This submission could not be accepted." }];
+    assert.deepEqual(interpretSignupResponse({ status: "invalid", errors }), { kind: "invalid", errors });
+  });
+
+  it("drops errors naming a field the form does not have, keeping the rest", () => {
+    const email = { field: "email", message: "Enter a valid email address." };
+    const body = { status: "invalid", errors: [{ field: "company", message: "x" }, email] };
+    assert.deepEqual(interpretSignupResponse(body), { kind: "invalid", errors: [email] });
+  });
+
+  it("drops a consent error while no consent box exists", () => {
+    const body = { status: "invalid", errors: [{ field: "consent", message: "Please tick the box to continue." }] };
+    assert.deepEqual(interpretSignupResponse(body), { kind: "failed", message: SIGNUP_FAILURE_MESSAGES.serverError });
+  });
+
   it("tells a rate-limited visitor to wait", () => {
     assert.deepEqual(interpretSignupResponse({ status: "rate-limited" }), {
       kind: "failed",
@@ -190,6 +206,10 @@ describe("interpretSignupResponse (what the visitor is told)", () => {
     { status: "invalid" },
     { status: "invalid", errors: "bad" },
     { status: "invalid", errors: [{ nope: 1 }] },
+    // An unknown field would have the form focus the hidden honeypot (#company)
+    // or some unrelated element, under "correct the highlighted fields".
+    { status: "invalid", errors: [{ field: "company", message: "Company is required." }] },
+    { status: "invalid", errors: [{ field: "main", message: "x" }] },
     { ok: true },
     [],
   ]) {

@@ -12,6 +12,7 @@ import assert from "node:assert/strict";
 
 import { POST } from "@/app/api/early-access/route";
 import { isSignupStorageConfigured } from "@/lib/early-access-store";
+import { interpretSignupResponse } from "@/lib/early-access";
 
 const URL_ = "https://abcdefghijklmnopqrst.supabase.co";
 const SECRET = "sb_secret_FAKE_TEST_VALUE_not_a_real_key";
@@ -267,6 +268,23 @@ describe("invalid input is rejected before any storage call", () => {
     assert.equal(status, 400);
     assert.equal(body.status, "invalid");
     assert.equal(calls.length, 0);
+  });
+
+  // The form shows only errors that name one of its own fields (or "form"), so
+  // every rejection this route can produce must survive that filter. A new
+  // server-side field error that the form does not know would otherwise reach
+  // the visitor as a generic "not saved" instead of the real reason.
+  it("every rejection reaches the visitor as the same field or form message", async () => {
+    const rejections = [
+      ...cases.map(([, payload]) => post(payload)),
+      post(null, { raw: "{not json" }),
+      post(null, { raw: "[1,2]" }),
+      post(null, { raw: "x".repeat(5000) }),
+    ];
+    for (const response of await Promise.all(rejections)) {
+      const { body } = await read(response);
+      assert.deepEqual(interpretSignupResponse(body), { kind: "invalid", errors: body.errors });
+    }
   });
 });
 

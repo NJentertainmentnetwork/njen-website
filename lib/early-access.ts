@@ -19,6 +19,8 @@
  * landing page, so this page never claims a signup it did not store.
  */
 
+import { earlyAccessFields } from "@/lib/forms";
+
 /** One signup, as it is stored. NJEN-owned and exportable. */
 export type EarlyAccessSignup = {
   name: string;
@@ -142,6 +144,22 @@ export function normaliseSignupSource(value: unknown): string | null {
   return SOURCE_PATTERN.test(text) ? text : null;
 }
 
+/**
+ * Fields an "invalid" answer may name: the form's own inputs, the consent box
+ * when it exists, and "form" for a form-level message.
+ *
+ * The form focuses the element whose id matches the first field error, so an
+ * unexpected name must not pass through: "company" would put keyboard focus in
+ * the hidden honeypot, and any other id could land on some unrelated element
+ * while "correct the highlighted fields" pointed at nothing. Such an answer is
+ * treated as the server failure it is.
+ */
+const ERROR_FIELDS: ReadonlySet<string> = new Set([
+  ...earlyAccessFields.map((field) => field.name),
+  ...(EARLY_ACCESS_CONSENT ? ["consent"] : []),
+  "form",
+]);
+
 /** What the form shows after a submission. Pure, so every branch is testable. */
 export type SignupOutcome =
   /** A row was stored. The only outcome that may say "you're in". */
@@ -183,7 +201,8 @@ export function interpretSignupResponse(body: unknown): SignupOutcome {
             typeof error === "object" &&
             error !== null &&
             typeof (error as { field?: unknown }).field === "string" &&
-            typeof (error as { message?: unknown }).message === "string",
+            typeof (error as { message?: unknown }).message === "string" &&
+            ERROR_FIELDS.has((error as { field: string }).field),
         )
       : [];
     if (errors.length > 0) return { kind: "invalid", errors };
