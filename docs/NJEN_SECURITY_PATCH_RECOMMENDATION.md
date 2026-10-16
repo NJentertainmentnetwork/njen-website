@@ -1,84 +1,80 @@
 # NJEN — Security Patch Recommendation (for approval)
 
-**Prepared 12-10-2026 (Day 21). Nothing has been upgraded.** `package.json`, `package-lock.json` and installed packages are unchanged. **Next.js 16 is on hold** and is not part of this recommendation.
+**Updated 16-10-2026 (Day 25). Supersedes the Day 21 version, which proposed `next@15.5.27`: 15.5.27 is itself affected by the 14 October advisories below.** Nothing has been upgraded. `package.json`, `package-lock.json` and installed packages are unchanged.
 
 This patch is meant to go in as **its own commit**, separate from the Early Access work, so it can be reviewed and reverted on its own.
 
 ---
 
-## 1. Evidence
+## 1. Evidence (16-10-2026)
 
-- **Installed tree:** `npm ls` on 12-10-2026: `next@15.5.25` → nested `postcss@8.4.31` and `sharp@0.35.4`; root `postcss@8.5.28`; `source-map-js@1.2.1` under both PostCSS copies.
-- **`npm audit`, 12-10-2026:** **4 vulnerable packages** (1 moderate, 3 high) carrying **8 advisories**. Unchanged since 09-10-2026.
-- **Registry, 12-10-2026:** the newest Next.js 15.5 release is still **15.5.27** (`backport` tag); the newest `sharp` is **0.35.5**; the newest `source-map-js` is **1.2.2**. The candidate versions are still current.
-- **Advisory pages:** GitHub Security Advisories, read 09-10-2026 (`next`, `sharp`, `source-map-js`) and 12-10-2026 (all four PostCSS advisories). CVE-2026-96889 was checked in the CVE Program's record service on 12-10-2026.
-
----
-
-## 2. Candidates
-
-| | `next` | `sharp` | `source-map-js` |
-|---|---|---|---|
-| Installed | 15.5.25 | 0.35.4 | 1.2.1 |
-| Proposed | **15.5.27** | **0.35.5** | **1.2.2** |
-| Relationship | **Direct** dependency | Transitive (optional dependency of `next`) | Transitive (via both `postcss` copies) |
-| Advisories | GHSA-4jqv-mc3x-m676 / CVE-2026-94543: SSG/ISR cache poisoning, self-hosted. GHSA-mcj8-r9mp-w47p / CVE-2026-94484: SSG/ISR cache poisoning, cross-user content substitution and DoS | GHSA-wq5f-xc86-pv6w: bundled librsvg use-after-free. Upstream CVE-2026-96889 (published 23-09-2026; affects librsvg). sharp has no separate CVE, which explains "No known CVE" on the advisory page | GHSA-68fv-2mgg-jv7q / CVE-2026-93749: event-loop DoS from crafted indexed source maps |
-| Severity (CVSS v4, GHSA) | Moderate, 6.3 each | High, 8.9 | High, 8.7 |
-| Affected range | ≥15.0.0 <15.5.27 (and ≥16.0.0 <16.3.8) | <0.35.5 | ≥1.0.0 <1.2.2 |
-| Stated conditions | Pages Router + SSG/ISR + self-hosted ("Applications deployed on Vercel are not affected"); root catch-all page + SSG/ISR | Decoding SVG through librsvg | Parsing an attacker-supplied indexed source map |
-| This site | App Router only, no `pages/`, no catch-all route → **conditions not met** | Image optimizer handles 2 local PNGs; no SVGs; SVG optimization off by default → **low** | Build-time, own files only → **low** |
-| Change type | Patch, within 15.5 (`package.json` + lockfile) | Patch, within `next`'s allowed range (lockfile only) | Patch, in range (lockfile only) |
-| Compatibility risk | Low: same minor line, same Node and React requirements. Release notes for 15.5.26/15.5.27 **not reviewed** | Low: **needs Node ≥ 20.9.0** (Vercel's current defaults meet this; confirm the project isn't pinned lower) | Very low |
-| Testable without Next.js 16? | **Yes** | **Yes** | **Yes** |
-
-**Already tested, in an isolated copy only** (09-10-2026, a scratch folder built from the committed code; never the real repository):
-- `npm ci`, `npm run typecheck` and `npm run build` passed (23 routes);
-- the 90-check regression suite passed;
-- the hero image served through the optimizer (200, WebP), which exercises the new `sharp`;
-- `npm audit` dropped from 4 vulnerable packages to 2.
-
-**Commands, to be run only after approval:**
-```
-npm install next@15.5.27 --save-exact
-npm update sharp source-map-js
-```
-**Result:** clears **4 of the 8 advisories**. Not resolved until the installed tree confirms it (`npm ls`, `npm audit`) in the real repository.
-
-**Regression tests after applying:**
-- `npm ci`, `npm run typecheck` and `npm run build`
-- the regression suite: routes, 404s, headers/CSP, noindex, Early Access validation, body cap, rate limit
-- `/_next/image` returns the Early Access hero
-- on a Vercel Preview: browser console free of CSP errors, plus `LAUNCH_QA_CHECKLIST.md` §6 tests 12–15 and 20
-
-**Rollback:** revert that one commit (`package.json` + `package-lock.json`) and redeploy. On Vercel, NJEN can also promote the previous deployment.
+- **Installed tree** (`npm ls`): `next@15.5.25` → nested `postcss@8.4.31` and `sharp@0.35.4`; root `postcss@8.5.28`; `source-map-js@1.2.1` under both PostCSS copies. The lockfile matches.
+- **`npm audit`:** 4 vulnerable packages (1 moderate, 3 high), 8 advisories. npm offers `next@15.5.28`. **Note:** the npm advisory database does not yet list the 14 October Next.js advisories against `next`. They are confirmed from the official sources below.
+- **Registry:** `next@15.5.28` (`backport` tag) and `16.4.1` published 14-10-2026; latest is `16.4.2`. `sharp@0.35.5`, `source-map-js@1.2.2` are current.
+- **Official sources, read 16-10-2026:** the Next.js blog post "Next.js Security Update for Upstream Vulnerabilities" (14-10-2026); GitHub advisories GHSA-2464-fhr4-w9xw, GHSA-p3m5-59mp-jv5r, GHSA-673q-mjm6-r5xr; the Next.js support policy.
 
 ---
 
-## 3. PostCSS: separate, and not fixable on Next.js 15
+## 2. The 14 October 2026 Next.js security update
 
-The vulnerable copy is `postcss@8.4.31`, **nested inside `next`**. Next.js uses it to process this site's own stylesheet at build time. The project's own direct `postcss@8.5.28` is not affected.
-
-| Advisory | CVE | Severity | Affected | Fixed in | Needs |
+| Advisory | Severity | Affected | Fixed | Condition | This site (15.5.25) |
 |---|---|---|---|---|---|
-| GHSA-qx2v-qp2m-jg93 | CVE-2026-41305 | Moderate (CVSS 3.1: 6.1) | <8.5.10 | 8.5.10 | User-submitted CSS re-stringified into a `<style>` tag |
-| GHSA-6g55-p6wh-862q | CVE-2026-45623 | High (CVSS 3.1: 7.5) | ≤8.5.11 | 8.5.12 | Attacker-controlled CSS processed with source maps on; error text surfaced |
-| GHSA-r28c-9q8g-f849 | CVE-2026-73646 | High (CVSS 3.1: 7.5) | ≤8.5.17 | 8.5.18 | Attacker-controlled CSS with a `sourceMappingURL` to a `.map` file; `result.map` exposed |
-| GHSA-fxqj-rqcc-2cmp | CVE-2026-69153 | Moderate (CVSS 4.0: 6.3) | ≤8.5.22 | 8.5.23 | As above, with `from` unset |
+| **GHSA-2464-fhr4-w9xw / CVE-2026-96889**: unauthenticated RCE in the Image Optimization API when SVG files are used | **Critical**, CVSS v4 9.5 | `>=10.0.0 <=15.5.27`, `>16.0.0 <=16.4.0` | **15.5.28**, 16.4.1; or `sharp` ≥ 0.35.5 | Upstream librsvg flaw in `sharp`; "when Next.js runs on glibc-based Linux" (Vercel's build and function runtime is Linux) | **Affected version.** The site uses the optimizer (`/_next/image`) for its own local PNG/JPG files; no SVG is served; `dangerouslyAllowSVG` is off (default); no remote image sources. The advisory doesn't fully describe the exploit conditions, so **this is not assessed as low risk.** Treat as Critical until patched |
+| **GHSA-p3m5-59mp-jv5r**: DoS in App Router using Server Actions | **High**, CVSS v4 8.2 | `>=13.0.0 <=15.5.27`, `>=16.0.0 <=16.4.0` | **15.5.28**, 16.4.1 | App Router with **at least one Server Action**. "Applications … not using Server Actions are not vulnerable" | **Affected version, condition not met today:** no `"use server"` anywhere in the code (checked 16-10-2026). Would become exploitable the moment a Server Action is added |
+| GHSA-673q-mjm6-r5xr: RCE in `use cache` returning typed arrays | Critical, CVSS v4 9.5 | `>=16.0.0 <=16.4.0` only | 16.4.1 | Cache Components | **Not affected** (15.x) |
 
-All four require **attacker-controlled CSS**. This site has none; it only builds its own stylesheet. **Exposure is assessed as low.** That is a judgement from the stated conditions, not a test against an exploit, and the advisories remain open.
+Earlier open advisories, still present in `npm audit`:
 
-**Why it can't be patched now:**
-- `next@15.5.27` still pins `postcss@8.4.31` (registry metadata), and no Next.js 15 release ships a fixed copy.
-- Next.js 16.3.6–16.4.0 ship `postcss@8.5.23`, but **Next.js 16 is on hold**: it is a major version whose upgrade guide has not been reviewed.
-- Forcing the nested version with an npm `overrides` entry was tried in the isolated copy (09-10-2026) and **did not apply cleanly** (`ELSPROBLEMS`). Making it work means regenerating the lockfile, so it is not recommended.
+| Package | Advisory | Severity | Fixed in | This site |
+|---|---|---|---|---|
+| `next` | GHSA-4jqv-mc3x-m676, GHSA-mcj8-r9mp-w47p (SSG/ISR cache poisoning) | Moderate 6.3 | 15.5.27 | Conditions not met (no Pages Router, no catch-all; Vercel-hosted not affected) |
+| `sharp` (nested in `next`) | GHSA-wq5f-xc86-pv6w (librsvg, CVE-2026-96889) | High 8.9 | 0.35.5 | Same root cause as the Critical Next.js advisory above |
+| `source-map-js` | GHSA-68fv-2mgg-jv7q (event-loop DoS) | High 8.7 | 1.2.2 | Build-time, own files only |
+| `postcss` 8.4.31 (nested in `next`) | 4 advisories (2 High, 2 Moderate) | — | 8.5.23 | **Not fixable on Next.js 15**: `next@15.5.28` still pins `postcss@8.4.31`. Needs attacker-controlled CSS; the site only builds its own stylesheet |
 
-**Recommendation:** accept and record this low build-time risk for launch, and plan the Next.js 16 upgrade as its own scoped piece of work after launch.
+---
+
+## 3. Proposed change
+
+| | Installed | Proposed | How |
+|---|---|---|---|
+| `next` (direct) | 15.5.25 | **15.5.28** (exact) | `package.json` + lockfile |
+| `sharp` (transitive) | 0.35.4 | **0.35.5** | lockfile. `next@15.5.28` accepts `^0.34.3 \|\| ^0.35.5`. 0.34.x is also vulnerable, so the installed version **must be checked**, not assumed |
+| `source-map-js` (transitive) | 1.2.1 | **1.2.2** | lockfile |
+
+**Commands, only after written approval:**
+```
+npm install next@15.5.28 --save-exact
+npm update sharp source-map-js
+npm ls next sharp source-map-js     # must show 15.5.28, 0.35.5, 1.2.2
+npm audit                           # expected: only the nested postcss advisories remain
+```
+
+**A major upgrade is avoidable for this patch:** 15.5.28 is a patch within the current 15.5 line, with the same React 19.1 and Node requirements. **It is not avoidable for long.** Next.js 15.x is in Maintenance LTS, which lasts two years from its 21-10-2024 release, so security fixes for 15.x are expected to stop around **21-10-2026, five days from now**. Any advisory published after that date may get no 15.x fix. **Recommendation:** apply 15.5.28 now, and plan a separately scoped and approved upgrade to Next.js 16 (Active LTS) soon after, ideally before or shortly after launch. That upgrade also clears the PostCSS advisories.
+
+**Compatibility risks:**
+- Low: same minor line.
+- `sharp@0.35.5` needs Node ≥ 20.9.0. Vercel's current default meets this; confirm the Vercel project's Node version isn't pinned lower.
+- Release notes for 15.5.26–15.5.28 have not been reviewed line by line. The patch has **not yet been re-tested at 15.5.28** in an isolated copy; the Day 20 isolated test was at 15.5.27.
+
+**Tests after applying:**
+1. `npm ci`, `npx tsc --noEmit`, `npm run build` (23 routes).
+2. `npm test` (currently 140/140).
+3. Local `next start` with storage blanked: `node scripts/early-access-live-check.mjs --mode unconfigured` (11/11) and `node scripts/early-access-browser-check.mjs` (41/41).
+4. `/_next/image?url=/images/early-access/NJEN_Early_Access_Mobile_Hero.png&w=828&q=72` returns 200 WebP/AVIF. This exercises the new `sharp`.
+5. Secret scan of `.next/static` (0 matches).
+6. On the Vercel Preview: `/early-access` loads, hero images render, 0 CSP errors in the console, and `LAUNCH_QA_CHECKLIST.md` §6 tests 12–15 and 20.
+
+**Rollback:** revert the one commit (`package.json` + `package-lock.json`) and redeploy, or promote the previous deployment in Vercel.
+
+**Cost:** none.
 
 ---
 
 ## 4. Decision requested
 
-1. **Approve** the three patch updates above, as a separate commit, with the listed tests: **yes / no**.
-2. **Accept** the PostCSS advisories as a documented, low, build-time risk until a separately approved Next.js 16 upgrade: **yes / no**.
+1. **Approve** `next@15.5.28` + `sharp@0.35.5` + `source-map-js@1.2.2`, as a separate commit, with the tests in §3: **yes / no**.
+2. **Accept** the nested PostCSS advisories as a documented build-time risk until a separately approved Next.js 16 upgrade: **yes / no**.
+3. **Agree** to scope the Next.js 16 upgrade as its own piece of work, given 15.x security support ends around 21-10-2026: **yes / no**.
 
-Cost: none (open-source packages). Nothing will be changed until (1) is approved in writing.
+Nothing will be changed until (1) is approved in writing.

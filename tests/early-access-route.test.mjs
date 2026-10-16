@@ -237,6 +237,11 @@ describe("invalid input is rejected before any storage call", () => {
     ["name too long", { ...valid, name: "a".repeat(121) }, [{ field: "name", message: "Your name must be 120 characters or fewer." }]],
     ["honeypot filled", { ...valid, company: "Acme" }, [{ field: "form", message: "This submission could not be accepted." }]],
     ["submitted too fast", { ...valid, elapsedMs: 10 }, [{ field: "form", message: "This submission could not be accepted." }]],
+    // The real form always sends a number. A script that leaves the timing
+    // signal out, or sends something else, must not skip the check.
+    ["timing signal missing", { ...valid, elapsedMs: undefined }, [{ field: "form", message: "This submission could not be accepted." }]],
+    ["timing signal not a number", { ...valid, elapsedMs: "5000" }, [{ field: "form", message: "This submission could not be accepted." }]],
+    ["timing signal negative", { ...valid, elapsedMs: -5000 }, [{ field: "form", message: "This submission could not be accepted." }]],
   ];
 
   for (const [label, payload, errors] of cases) {
@@ -263,6 +268,23 @@ describe("invalid input is rejected before any storage call", () => {
     });
   }
 
+  // A cross-site page can send text/plain or form bodies without a CORS
+  // preflight, using its visitors' browsers (and IP addresses) to post signups.
+  // Requiring JSON forces a preflight, which this route never approves.
+  for (const type of ["text/plain", "text/plain;charset=UTF-8", "application/x-www-form-urlencoded", "multipart/form-data; boundary=x"]) {
+    it(`Content-Type ${type} -> 415, nothing stored`, async () => {
+      const { status, body } = await read(await post(valid, { headers: { "content-type": type } }));
+      assert.equal(status, 415);
+      assert.deepEqual(body, { status: "invalid", errors: [{ field: "form", message: "Invalid request." }] });
+      assert.equal(calls.length, 0);
+    });
+  }
+
+  it("accepts application/json with a charset", async () => {
+    const { status } = await read(await post(valid, { headers: { "content-type": "application/json; charset=utf-8" } }));
+    assert.equal(status, 201);
+  });
+
   it("a JSON array gets field errors, not a crash", async () => {
     const { status, body } = await read(await post(null, { raw: "[1,2]" }));
     assert.equal(status, 400);
@@ -280,6 +302,7 @@ describe("invalid input is rejected before any storage call", () => {
       post(null, { raw: "{not json" }),
       post(null, { raw: "[1,2]" }),
       post(null, { raw: "x".repeat(5000) }),
+      post(valid, { headers: { "content-type": "text/plain" } }),
     ];
     for (const response of await Promise.all(rejections)) {
       const { body } = await read(response);

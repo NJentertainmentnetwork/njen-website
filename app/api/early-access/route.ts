@@ -118,6 +118,15 @@ export async function POST(request: Request) {
     return json({ status: "rate-limited" }, 429);
   }
 
+  // JSON only. A text/plain or form body is a "simple" cross-site request: any
+  // other website could make its visitors' browsers post signups here, from
+  // their IP addresses, with no CORS preflight. A JSON body always triggers a
+  // preflight, which this route never approves. The real form sends JSON.
+  const contentType = request.headers.get("content-type")?.split(";")[0]?.trim().toLowerCase();
+  if (contentType !== "application/json") {
+    return json({ status: "invalid", errors: [{ field: "form", message: "Invalid request." }] }, 415);
+  }
+
   const length = Number(request.headers.get("content-length") ?? 0);
   if (Number.isFinite(length) && length > MAX_BODY_BYTES) {
     return json({ status: "invalid", errors: [{ field: "form", message: "Request too large." }] }, 413);
@@ -139,7 +148,9 @@ export async function POST(request: Request) {
   }
 
   const body = payload as Record<string, unknown>;
-  const elapsedMs = typeof body.elapsedMs === "number" ? body.elapsedMs : undefined;
+  // The real form always sends a number. A missing or non-numeric value counts
+  // as 0 (too fast), so leaving the field out cannot skip the timing check.
+  const elapsedMs = typeof body.elapsedMs === "number" && Number.isFinite(body.elapsedMs) ? body.elapsedMs : 0;
 
   const result = validateSubmission(
     "early-access",
