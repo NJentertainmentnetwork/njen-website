@@ -1,6 +1,8 @@
 # NJEN — Security Patch Recommendation (for approval)
 
-**Updated 16-10-2026 (Day 25). Supersedes the Day 21 version, which proposed `next@15.5.27`: 15.5.27 is itself affected by the 14 October advisories below.** Nothing has been upgraded. `package.json`, `package-lock.json` and installed packages are unchanged.
+**Updated 16-10-2026 (Day 25); isolated re-test added 19-10-2026 (Day 26, §3). Approval status 19-10-2026: not received.**
+
+**Supersedes the Day 21 version, which proposed `next@15.5.27`: 15.5.27 is itself affected by the 14 October advisories below.** Nothing has been upgraded. `package.json`, `package-lock.json` and installed packages are unchanged.
 
 This patch is meant to go in as **its own commit**, separate from the Early Access work, so it can be reviewed and reverted on its own.
 
@@ -50,12 +52,20 @@ npm ls next sharp source-map-js     # must show 15.5.28, 0.35.5, 1.2.2
 npm audit                           # expected: only the nested postcss advisories remain
 ```
 
-**A major upgrade is avoidable for this patch:** 15.5.28 is a patch within the current 15.5 line, with the same React 19.1 and Node requirements. **It is not avoidable for long.** Next.js 15.x is in Maintenance LTS, which lasts two years from its 21-10-2024 release, so security fixes for 15.x are expected to stop around **21-10-2026, five days from now**. Any advisory published after that date may get no 15.x fix. **Recommendation:** apply 15.5.28 now, and plan a separately scoped and approved upgrade to Next.js 16 (Active LTS) soon after, ideally before or shortly after launch. That upgrade also clears the PostCSS advisories.
+**A major upgrade is avoidable for this patch:** 15.5.28 is a patch within the current 15.5 line, with the same React 19.1 and Node requirements. **It is not avoidable for long.** Next.js 15.x is in Maintenance LTS, which lasts two years from its 21-10-2024 release, so security fixes for 15.x are expected to stop around **21-10-2026**. Any advisory published after that date may get no 15.x fix. **Recommendation:** apply 15.5.28 now, and plan a separately scoped and approved upgrade to Next.js 16 (Active LTS) soon after, ideally before or shortly after launch. That upgrade also clears the PostCSS advisories.
 
 **Compatibility risks:**
 - Low: same minor line.
 - `sharp@0.35.5` needs Node ≥ 20.9.0. Vercel's current default meets this; confirm the Vercel project's Node version isn't pinned lower.
-- Release notes for 15.5.26–15.5.28 have not been reviewed line by line. The patch has **not yet been re-tested at 15.5.28** in an isolated copy; the Day 20 isolated test was at 15.5.27.
+- Release notes for 15.5.26–15.5.28 have not been reviewed line by line.
+
+**Re-tested at 15.5.28 in an isolated copy, 19-10-2026 (Day 26).** This was a scratch folder outside the repository, with no `.env` files; the repository itself is unchanged.
+- **Commands:** `npm ci`, then exactly the commands above.
+- **`npm ls`:** `next@15.5.28`, `sharp@0.35.5`, `source-map-js@1.2.2`.
+- **What changed:** in `package.json`, only the `next` line. In the lockfile: `next` and its `@next/*` platform binaries, `sharp` and its `@img/*` binaries (libvips 1.3.3 → 1.3.4), and `source-map-js`.
+- **`npm audit`:** 2 left (nested `postcss`, plus `next` flagged only because it bundles that `postcss`).
+- **Checks:** typecheck pass; `npm test` 140/140; build pass (23 routes); `.next/static` secret scan 0 matches.
+- **Local `next start`:** health OK; security headers present; `/_next/image` returns 200 WebP for both hero images; live check (unconfigured) 11/11; browser check 41/41.
 
 **Tests after applying:**
 1. `npm ci`, `npx tsc --noEmit`, `npm run build` (23 routes).
