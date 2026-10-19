@@ -92,6 +92,15 @@ function finish(code) {
   }, 500);
 }
 
+// A full run takes under a minute. If the browser stops answering, a DevTools
+// call would otherwise wait forever, leaving a headless browser and its temp
+// profile behind and no result. Fail loudly instead.
+const WATCHDOG_MS = Number(process.env.NJEN_BROWSER_CHECK_TIMEOUT_MS) || 5 * 60 * 1000;
+setTimeout(() => {
+  console.error(`FAIL  the check did not finish within ${Math.round(WATCHDOG_MS / 1000)} s and was stopped: a hang, not a test result.`);
+  finish(1);
+}, WATCHDOG_MS).unref();
+
 let socketUrl;
 for (let attempt = 0; attempt < 50 && !socketUrl; attempt++) {
   try {

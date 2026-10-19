@@ -6,11 +6,12 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", ".
 
 /**
  * Resolves `@/x` against the repository root and `./x` to `./x.ts`. `next/server`
- * becomes `next/server.js`: the `next` package has no exports map, so Node's
- * ESM resolver needs the file name the bundler would have found.
+ * and `next/navigation` become `next/server.js` and `next/navigation.js`: the
+ * `next` package has no exports map, so Node's ESM resolver needs the file name
+ * the bundler would have found.
  */
 export async function resolve(specifier, context, next) {
-  if (specifier === "next/server") return next("next/server.js", context);
+  if (specifier === "next/server" || specifier === "next/navigation") return next(`${specifier}.js`, context);
   let base = null;
   if (specifier.startsWith("@/")) {
     base = path.join(root, specifier.slice(2));

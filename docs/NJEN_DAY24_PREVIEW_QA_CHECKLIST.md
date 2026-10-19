@@ -9,6 +9,7 @@ The local results quoted in the "Local" column come from `DAY24_IMPLEMENTATION_R
 - Use a test address only. Never paste a real visitor's details into a ticket, chat or report.
 - Do not change any Vercel setting to make a check pass. Record the failure and stop.
 - `scripts/early-access-live-check.mjs` and `scripts/early-access-browser-check.mjs` refuse non-local URLs. Run the checks below by hand, with a browser and `curl`.
+- **Added later:** rows A3, A4, B1–B8 and C1 are read-only, and `scripts/site-smoke-check.mjs` runs them all against the Preview. It sends GET requests only and never submits the form: `node scripts/site-smoke-check.mjs --base https://<deployment>.vercel.app --share "<share link>"`. Copy each PASS/FAIL into the Result column. A1, A2 and sections C2–E still need a person, a browser and real devices.
 
 **How to fill in a row:** tick one of Pass / Fail / Not tested, and add the device, browser and date in Notes.
 
