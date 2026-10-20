@@ -1,8 +1,10 @@
 # NJEN — Security Patch Recommendation (for approval)
 
-**Updated 16-10-2026 (Day 25); isolated re-test added 19-10-2026 (Day 26, §3). Approval status 19-10-2026: not received.**
+**Updated 16-10-2026 (Day 25); isolated re-test added 19-10-2026 (Day 26, §3).**
 
-**Supersedes the Day 21 version, which proposed `next@15.5.27`: 15.5.27 is itself affected by the 14 October advisories below.** Nothing has been upgraded. `package.json`, `package-lock.json` and installed packages are unchanged.
+**Status 20-10-2026 (Day 28): APPLIED in the development codebase, not yet committed or deployed.** Approval of decision (1) was relayed by the developer on 20-10-2026, "subject to compatibility verification"; the written approval itself is not stored in this repository. Installed now: `next@15.5.28`, `sharp@0.35.5`, `source-map-js@1.2.2`. All checks in §3 passed (`DAY28_IMPLEMENTATION_REPORT.md` §2). Decisions (2) and (3) are not recorded as answered.
+
+**Supersedes the Day 21 version, which proposed `next@15.5.27`: 15.5.27 is itself affected by the 14 October advisories below.**
 
 This patch is meant to go in as **its own commit**, separate from the Early Access work, so it can be reviewed and reverted on its own.
 
