@@ -145,6 +145,32 @@ describe("readSignupSource (browser side)", () => {
     assert.equal(readSignupSource("", "https://l.facebook.com/l.php?u=https%3A%2F%2Fexample.org&h=secret"), "l.facebook.com");
   });
 
+  it("keeps Meta's short source names (fb, ig, msg, an)", () => {
+    for (const name of ["fb", "ig", "msg", "an"]) {
+      assert.equal(readSignupSource(`?utm_source=${name}&fbclid=abc`, ""), name);
+    }
+  });
+
+  it("ignores an unfilled {{site_source_name}} template and falls back to the referrer", () => {
+    assert.equal(readSignupSource("?utm_source={{site_source_name}}", "https://lm.facebook.com/"), "lm.facebook.com");
+    assert.equal(readSignupSource("?utm_source=%7B%7Bsite_source_name%7D%7D", ""), null);
+  });
+
+  it("reads Facebook, Instagram and Messenger in-app referrers as hosts", () => {
+    assert.equal(readSignupSource("", "https://lm.facebook.com/l.php?u=x"), "lm.facebook.com");
+    assert.equal(readSignupSource("", "https://l.instagram.com/?u=x&e=y"), "l.instagram.com");
+    assert.equal(readSignupSource("", "https://l.messenger.com/l.php?u=x"), "l.messenger.com");
+    assert.equal(readSignupSource("", "android-app://com.facebook.katana/"), "com.facebook.katana");
+  });
+
+  it("never stores fbclid on its own", () => {
+    assert.equal(readSignupSource("?fbclid=IwAR0abc", ""), null);
+  });
+
+  it("decodes a plus-encoded campaign name", () => {
+    assert.equal(readSignupSource("?utm_source=Facebook+Ads", ""), "Facebook Ads");
+  });
+
   it("skips an unsafe parameter and uses the next one", () => {
     assert.equal(readSignupSource("?source=%3D1%2B1&utm_source=facebook", ""), "facebook");
   });
